@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await registerUser(credentials);
       console.log(response);
-      if (response.status == 200){
+      if (response.status == 201){
         const { token, refresh_token, user, expires_in } = response.data;
         storeToken(token, refresh_token, expires_in);
         localStorage.setItem("user", JSON.stringify(user));
@@ -77,7 +77,6 @@ export const AuthProvider = ({ children }) => {
 
       const response = await refreshToken({ refresh_token: storedRefreshToken });
       const { token, expires_in } = response.data;
-
       storeToken(token, storedRefreshToken, expires_in);
     } catch (error) {
       console.error("Token refresh failed:", error);
