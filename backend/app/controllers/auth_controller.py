@@ -37,10 +37,10 @@ def register():
 def login():
     data = request.get_json()
     token = AuthService.login(data.get("email"), data.get("password"))
-    user = User.query.filter_by(email=data.get("email")).first()
-    refresh_token = AuthService.generate_refresh_token(user.id)
+    
     if token:
-
+        user = User.query.filter_by(email=data.get("email")).first()
+        refresh_token = AuthService.generate_refresh_token(user.id)
         return (
             jsonify(
                 {
