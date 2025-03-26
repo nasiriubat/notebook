@@ -5,13 +5,13 @@ import { Card, Form, Button, Alert, Spinner, ListGroup, Modal, Dropdown } from '
 import { NotebookContext } from "../context/NotebookContext";
 import { useContext } from "react";
 
-export default function SourceComponent({ notebookId, onSourceSelect }) {
+export default function SourceComponent({ notebookId, onSourceSelect, sources, onSourcesUpdate }) {
   const { refreshNotebooks } = useContext(NotebookContext);
-  const [sources, setSources] = useState([]);
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [creatingSource, setCreatingSource] = useState(false);
   const [selectedInputType, setSelectedInputType] = useState("file");
   const [textInput, setTextInput] = useState("");
   const [linkInput, setLinkInput] = useState("");
@@ -29,10 +29,6 @@ export default function SourceComponent({ notebookId, onSourceSelect }) {
   const MAX_TEXT_LENGTH = 1000;
 
   useEffect(() => {
-    fetchSources();
-  }, [notebookId]);
-
-  useEffect(() => {
     // Notify parent component of selected sources
     if (onSourceSelect) {
       const selectedSourceTexts = sources
@@ -41,20 +37,6 @@ export default function SourceComponent({ notebookId, onSourceSelect }) {
       onSourceSelect(selectedSourceTexts);
     }
   }, [selectedSources, sources, onSourceSelect]);
-
-  const fetchSources = async () => {
-    try {
-      setLoading(true);
-      const response = await getSources(notebookId);
-      setSources(response.data.reverse());
-      setError(null);
-    } catch (err) {
-      setError("Upload file to start");
-      console.error("Error fetching sources:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDrop = async (e) => {
     e.preventDefault();
@@ -98,6 +80,7 @@ export default function SourceComponent({ notebookId, onSourceSelect }) {
   const handleFileUpload = async (file) => {
     try {
       setFileError("");
+      setCreatingSource(true);
       
       // Frontend validation
       if (!validateFileType(file)) {
@@ -120,7 +103,9 @@ export default function SourceComponent({ notebookId, onSourceSelect }) {
         setFileError(response.data.error);
         return;
       }
-      await fetchSources();
+      if (onSourcesUpdate) {
+        onSourcesUpdate();
+      }
       setError(null);
     } catch (err) {
       console.error("Error uploading file:", err);
@@ -128,12 +113,14 @@ export default function SourceComponent({ notebookId, onSourceSelect }) {
       setFileError(errorMessage);
     } finally {
       setUploading(false);
+      setCreatingSource(false);
     }
   };
 
   const handleTextSubmit = async () => {
     try {
       setInputError("");
+      setCreatingSource(true);
       
       if (!textInput.trim()) {
         setInputError("Please enter some text");
@@ -157,19 +144,23 @@ export default function SourceComponent({ notebookId, onSourceSelect }) {
         return;
       }
       setTextInput("");
-      await fetchSources();
+      if (onSourcesUpdate) {
+        onSourcesUpdate();
+      }
     } catch (err) {
       console.error("Error uploading text:", err);
       const errorMessage = err.response?.data?.error || err.message || "Failed to upload text";
       setInputError(errorMessage);
     } finally {
       setUploading(false);
+      setCreatingSource(false);
     }
   };
 
   const handleLinkSubmit = async () => {
     try {
       setInputError("");
+      setCreatingSource(true);
       
       if (!linkInput.trim()) {
         setInputError("Please enter a link");
@@ -192,19 +183,23 @@ export default function SourceComponent({ notebookId, onSourceSelect }) {
         return;
       }
       setLinkInput("");
-      await fetchSources();
+      if (onSourcesUpdate) {
+        onSourcesUpdate();
+      }
     } catch (err) {
       console.error("Error uploading link:", err);
       const errorMessage = err.response?.data?.error || err.message || "Failed to upload link";
       setInputError(errorMessage);
     } finally {
       setUploading(false);
+      setCreatingSource(false);
     }
   };
 
   const handleYoutubeSubmit = async () => {
     try {
       setInputError("");
+      setCreatingSource(true);
       
       if (!youtubeInput.trim()) {
         setInputError("Please enter a YouTube link");
@@ -227,13 +222,16 @@ export default function SourceComponent({ notebookId, onSourceSelect }) {
         return;
       }
       setYoutubeInput("");
-      await fetchSources();
+      if (onSourcesUpdate) {
+        onSourcesUpdate();
+      }
     } catch (err) {
       console.error("Error uploading YouTube link:", err);
       const errorMessage = err.response?.data?.error || err.message || "Failed to upload YouTube link";
       setInputError(errorMessage);
     } finally {
       setUploading(false);
+      setCreatingSource(false);
     }
   };
 
@@ -245,7 +243,9 @@ export default function SourceComponent({ notebookId, onSourceSelect }) {
         setError(response.data.error);
         return;
       }
-      await fetchSources();
+      if (onSourcesUpdate) {
+        onSourcesUpdate();
+      }
       await refreshNotebooks();
       setError(null);
     } catch (err) {
@@ -309,7 +309,9 @@ export default function SourceComponent({ notebookId, onSourceSelect }) {
         setEditError(response.data.error);
         return;
       }
-      await fetchSources();
+      if (onSourcesUpdate) {
+        onSourcesUpdate();
+      }
       setShowEditModal(false);
       setEditingSource(null);
       setEditTitle("");
@@ -507,7 +509,6 @@ export default function SourceComponent({ notebookId, onSourceSelect }) {
                   />
                   <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                     <span className="text-truncate" style={{ maxWidth: '250px' }}>{src.title}</span>
-                    
                   </div>
                 </div>
                 <div className="d-flex align-items-center ms-2">
@@ -530,8 +531,27 @@ export default function SourceComponent({ notebookId, onSourceSelect }) {
                 </div>
               </ListGroup.Item>
             ))}
+            {creatingSource && (
+              <ListGroup.Item className="d-flex align-items-center">
+                <div className="d-flex align-items-center">
+                  <Spinner animation="border" size="sm" className="me-2" />
+                  <span>Creating source...</span>
+                </div>
+              </ListGroup.Item>
+            )}
           </ListGroup>
-        ) : null}
+        ) : (
+          <div className="text-center py-3">
+            {creatingSource ? (
+              <div className="d-flex align-items-center justify-content-center">
+                <Spinner animation="border" size="sm" className="me-2" />
+                <span>Creating source...</span>
+              </div>
+            ) : (
+              <span className="text-muted">No sources yet. Add one above.</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Edit Title Modal */}

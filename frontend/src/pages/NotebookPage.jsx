@@ -1,21 +1,38 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import SourceComponent from "../components/SourceComponent";
 import ChatComponent from "../components/ChatComponent";
 import NoteComponent from "../components/NoteComponent";
 import { NotebookContext } from "../context/NotebookContext";
+import { getSources } from "../api/api";
 
 export default function NotebookPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { currentNotebook, getNotebook, loading } = useContext(NotebookContext);
+  const [sources, setSources] = useState([]);
 
   useEffect(() => {
     if (id && (!currentNotebook || currentNotebook.id !== parseInt(id))) {
       getNotebook(id);
     }
   }, [id, currentNotebook, getNotebook]);
+
+  const fetchSources = async () => {
+    try {
+      const response = await getSources(id);
+      setSources(response.data.reverse());
+    } catch (err) {
+      console.error("Error fetching sources:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      fetchSources();
+    }
+  }, [id]);
 
   if (loading) {
     return (
@@ -58,13 +75,13 @@ export default function NotebookPage() {
         </div>
         <div className="row g-4">
           <div className="col-lg-3">
-            <SourceComponent notebookId={id} />
+            <SourceComponent notebookId={id} sources={sources} onSourcesUpdate={fetchSources} />
           </div>
           <div className="col-lg-6">
             <ChatComponent notebookId={id} />
           </div>
           <div className="col-lg-3">
-            <NoteComponent notebookId={id} />
+            <NoteComponent notebookId={id} onNoteAdded={fetchSources} />
           </div>
         </div>
       </div>
