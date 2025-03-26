@@ -4,7 +4,7 @@ import { FaPaperPlane, FaCopy, FaPlus, FaRedo } from "react-icons/fa";
 import { Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import './ChatComponent.css';
 
-const ChatComponent = ({ notebookId, selectedSources }) => {
+const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
   const [messages, setMessages] = useState([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -75,7 +75,10 @@ const ChatComponent = ({ notebookId, selectedSources }) => {
       
       // Show success message
       setError(null);
-      // You might want to trigger a refresh of sources here if needed
+      // Notify parent component about the new source
+      if (onSourceAdded) {
+        onSourceAdded(response.data);
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Failed to add to sources");
       console.error("Error adding to sources:", err);
@@ -91,12 +94,19 @@ const ChatComponent = ({ notebookId, selectedSources }) => {
     setError(null);
 
     try {
-      // Get the user message that preceded this bot message
-      const userMessage = messages[messageIndex - 1];
-      if (!userMessage) return;
+      // Find the last user message before this bot message
+      let lastUserMessage = null;
+      for (let i = messageIndex - 1; i >= 0; i--) {
+        if (messages[i].role === "user") {
+          lastUserMessage = messages[i];
+          break;
+        }
+      }
 
-      // Remove the old bot message
-      setMessages(prev => prev.filter((_, index) => index !== messageIndex));
+      if (!lastUserMessage) {
+        setError("Could not find the original question");
+        return;
+      }
 
       // Prepare context from selected sources
       const context = selectedSources.length > 0
@@ -106,10 +116,11 @@ const ChatComponent = ({ notebookId, selectedSources }) => {
       // Send message to backend with proper format
       const response = await sendChatMessage({
         context,
-        query: userMessage.content.trim()
+        query: lastUserMessage.content.trim(),
+        regenerate: true
       });
       
-      // Add new bot response
+      // Add new bot response after the existing messages
       setMessages(prev => [...prev, { role: "assistant", content: response.data.reply }]);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to regenerate response");

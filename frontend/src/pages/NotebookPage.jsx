@@ -96,6 +96,9 @@ export default function NotebookPage() {
             <ChatComponent 
               notebookId={id} 
               selectedSources={selectedSources}
+              onSourceAdded={(newSource) => {
+                setSources(prev => [newSource, ...prev]);
+              }}
             />
           </div>
           <div className="col-lg-3">

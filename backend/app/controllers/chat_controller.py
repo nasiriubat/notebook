@@ -10,6 +10,7 @@ def send_chat_message():
     data = request.get_json()
     query = data.get("query")
     context = data.get("context", "")
+    is_regenerate = data.get("regenerate", False)
     
     if not query:
         return jsonify(error="Query is required"), 400
@@ -21,11 +22,11 @@ def send_chat_message():
             {"role": "user", "content": f"Context: {context}\n\nQuestion: {query}"}
         ]
         
-        # Get response from OpenAI
+        # Get response from OpenAI with different parameters for regeneration
         response = client.chat.completions.create(
             model="gpt-4",
             messages=messages,
-            temperature=0.7,
+            temperature=0.8 if is_regenerate else 0.7,  # Slightly higher temperature for regeneration
             max_tokens=1000
         )
         
