@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { sendChatMessage, uploadSource } from "../api/api";
 import { FaPaperPlane, FaCopy, FaPlus, FaRedo } from "react-icons/fa";
 import { Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
+import './ChatComponent.css';
 
 const ChatComponent = ({ notebookId, selectedSources }) => {
   const [messages, setMessages] = useState([]);
@@ -64,13 +65,22 @@ const ChatComponent = ({ notebookId, selectedSources }) => {
 
   const handleAddToSource = async (content) => {
     try {
-      await uploadSource({
-        description: content,
+      setLoading(true);
+      const response = await uploadSource({
+        text: content,
         notebook_id: notebookId,
+        type: 'text',
+        is_note: true
       });
-      // Optionally show success message or refresh sources
+      
+      // Show success message
+      setError(null);
+      // You might want to trigger a refresh of sources here if needed
     } catch (err) {
+      setError(err.response?.data?.message || "Failed to add to sources");
       console.error("Error adding to sources:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -100,7 +110,7 @@ const ChatComponent = ({ notebookId, selectedSources }) => {
       });
       
       // Add new bot response
-      setMessages(prev => [...prev, { role: "assistant", content: response.data.message }]);
+      setMessages(prev => [...prev, { role: "assistant", content: response.data.reply }]);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to regenerate response");
       console.error("Error regenerating response:", err);
@@ -123,64 +133,80 @@ const ChatComponent = ({ notebookId, selectedSources }) => {
   }
 
   return (
-    <Card className="p-3 h-100">
-      <h5>Chat</h5>
+    <Card className="p-3 h-100 d-flex flex-column">
+      <h5 className="mb-3">Chat</h5>
       {error && (
         <Alert variant="danger" role="alert">
           {error}
         </Alert>
       )}
-      <div className="chat-box" style={{ height: "calc(100% - 150px)", overflowY: "auto" }}>
-        {!selectedSources?.length ? (
-          <div className="text-center text-muted py-5">
-            <i className="bi bi-chat-dots display-4 mb-3"></i>
-            <p className="mb-0">Select sources to start the conversation</p>
-          </div>
-        ) : messages.length === 0 ? (
-          <div className="text-center text-muted py-5">
-            <i className="bi bi-chat-dots display-4 mb-3"></i>
-            <p className="mb-0">Start a conversation with your sources</p>
-          </div>
-        ) : (
-          messages.map((message, index) => (
-            <div
-              key={index}
-              className={`message ${message.role === "user" ? "user-message" : "bot-message"}`}
-            >
-              <div className="message-content">
-                {message.content}
-                {message.role === "assistant" && (
-                  <div className="message-actions">
-                    <button
-                      onClick={() => handleCopyMessage(message.content)}
-                      className="action-button"
-                      title="Copy message"
-                    >
-                      <FaCopy />
-                    </button>
-                    <button
-                      onClick={() => handleAddToSource(message.content)}
-                      className="action-button"
-                      title="Add to sources"
-                    >
-                      <FaPlus />
-                    </button>
-                    <button
-                      onClick={() => handleRegenerate(index)}
-                      className="action-button"
-                      title="Regenerate response"
-                    >
-                      <FaRedo />
-                    </button>
-                  </div>
-                )}
-              </div>
+      <div 
+        className="chat-box flex-grow-1 d-flex flex-column-reverse overflow-auto mb-3"
+        style={{ 
+          height: "calc(100% - 150px)",
+          scrollBehavior: "smooth"
+        }}
+      >
+        <div className="d-flex flex-column">
+          {!selectedSources?.length ? (
+            <div className="text-center text-muted py-5">
+              <i className="bi bi-chat-dots display-4 mb-3"></i>
+              <p className="mb-0">Select sources to start the conversation</p>
             </div>
-          ))
-        )}
-        <div ref={messagesEndRef} />
+          ) : messages.length === 0 ? (
+            <div className="text-center text-muted py-5">
+              <i className="bi bi-chat-dots display-4 mb-3"></i>
+              <p className="mb-0">Start a conversation with your sources</p>
+            </div>
+          ) : (
+            messages.map((message, index) => (
+              <div
+                key={index}
+                className={`message-wrapper ${message.role === "user" ? "user-message-wrapper" : "bot-message-wrapper"}`}
+              >
+                <div className={`message ${message.role === "user" ? "user-message" : "bot-message"}`}>
+                  <div className="message-content">
+                    {message.content}
+                    {message.role === "assistant" && (
+                      <div className="message-actions">
+                        <Button
+                          variant="outline-secondary"
+                          size="sm"
+                          className="action-button"
+                          onClick={() => handleCopyMessage(message.content)}
+                          title="Copy message"
+                        >
+                          <FaCopy />
+                        </Button>
+                        <Button
+                          variant="outline-secondary"
+                          size="sm"
+                          className="action-button"
+                          onClick={() => handleAddToSource(message.content)}
+                          title="Add to sources"
+                        >
+                          <FaPlus />
+                        </Button>
+                        <Button
+                          variant="outline-secondary"
+                          size="sm"
+                          className="action-button"
+                          onClick={() => handleRegenerate(index)}
+                          title="Regenerate response"
+                        >
+                          <FaRedo />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
-      <div className="chat-input mt-3">
+      <div className="chat-input mt-auto">
         <div className="input-group">
           <textarea
             className="form-control"
