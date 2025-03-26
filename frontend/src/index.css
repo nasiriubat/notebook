@@ -164,3 +164,33 @@ body {
 @keyframes spinner-border {
   to { transform: rotate(360deg); }
 }
+
+/* Hide dropdown arrow */
+.dropdown-toggle::after {
+  display: none !important;
+}
+
+/* Ensure dropdown menu is properly aligned */
+.dropdown-menu {
+  min-width: 160px;
+  padding: 0.5rem 0;
+  margin: 0;
+  border: 1px solid rgba(0,0,0,.1);
+  border-radius: 0.375rem;
+  box-shadow: 0 0.5rem 1rem rgba(0,0,0,.15);
+}
+
+.dropdown-item {
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+.dropdown-item.text-danger:hover {
+  background-color: #dc3545;
+  color: white !important;
+}

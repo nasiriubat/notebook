@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { getSources, uploadSource, deleteSource } from "../api/api";
-import { MdSend, MdContentPaste, MdClose, MdCloudUpload } from "react-icons/md";
-import { Card, Form, Button, Alert, Spinner, ListGroup } from 'react-bootstrap';
+import { getSources, uploadSource, deleteSource, updateSource } from "../api/api";
+import { MdSend, MdContentPaste, MdClose, MdCloudUpload, MdMoreVert, MdEdit, MdDelete } from "react-icons/md";
+import { Card, Form, Button, Alert, Spinner, ListGroup, Modal, Dropdown } from 'react-bootstrap';
 import { NotebookContext } from "../context/NotebookContext";
 import { useContext } from "react";
 
@@ -19,6 +19,10 @@ export default function SourceComponent({ notebookId, onSourceSelect }) {
   const [fileError, setFileError] = useState("");
   const [inputError, setInputError] = useState("");
   const [selectedSources, setSelectedSources] = useState(new Set());
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingSource, setEditingSource] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editError, setEditError] = useState(null);
 
   const ALLOWED_FILE_TYPES = ["pdf", "txt", "jpg", "jpeg", "png"];
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
@@ -286,6 +290,38 @@ export default function SourceComponent({ notebookId, onSourceSelect }) {
     }
   };
 
+  const handleEditSource = (source) => {
+    setEditingSource(source);
+    setEditTitle(source.title);
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editTitle.trim()) {
+      setEditError("Title cannot be empty");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await updateSource(editingSource.id, { title: editTitle });
+      if (response.data.error) {
+        setEditError(response.data.error);
+        return;
+      }
+      await fetchSources();
+      setShowEditModal(false);
+      setEditingSource(null);
+      setEditTitle("");
+      setEditError(null);
+    } catch (err) {
+      console.error("Error updating source:", err);
+      setEditError(err.response?.data?.error || "Failed to update source");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading && sources.length === 0) {
     return (
       <Card className="p-3">
@@ -407,7 +443,7 @@ export default function SourceComponent({ notebookId, onSourceSelect }) {
               type="url"
               value={linkInput}
               onChange={(e) => setLinkInput(e.target.value)}
-              placeholder="Enter web link..."
+              placeholder="Enter web link or YouTube link..."
             />
             <Button variant="outline-secondary" onClick={handlePaste}>
               <MdContentPaste className="react-icons" style={{ fontSize: '1.2rem' }} />
@@ -416,6 +452,9 @@ export default function SourceComponent({ notebookId, onSourceSelect }) {
               <MdSend className="react-icons" style={{ fontSize: '1.2rem' }} />
             </Button>
           </div>
+          <small className="text-muted mt-2 d-block">
+            Supports both web links and YouTube links
+          </small>
         </div>
       )}
 
@@ -457,23 +496,72 @@ export default function SourceComponent({ notebookId, onSourceSelect }) {
                     checked={selectedSources.has(src.id)}
                     onChange={() => handleSourceSelect(src.id)}
                   />
-                  <span>{src.title}</span>
+                  <div className="d-flex flex-column">
+                    <span>{src.title}</span>
+                    {src.is_note && (
+                      <small className="text-warning">
+                        <i className="bi bi-exclamation-triangle me-1"></i>
+                        Note
+                      </small>
+                    )}
+                  </div>
                 </div>
                 <div className="d-flex gap-2">
-                  <Button
-                    variant="outline-danger"
-                    size="sm"
-                    onClick={() => handleDeleteSource(src.id)}
-                    disabled={loading}
-                  >
-                    <MdClose className="react-icons" />
-                  </Button>
+                  <Dropdown>
+                    <Dropdown.Toggle variant="link" className="p-0" style={{ boxShadow: 'none' }}>
+                      <MdMoreVert className="react-icons" />
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu align="end">
+                      <Dropdown.Item onClick={() => handleEditSource(src)}>
+                        <MdEdit className="me-2 react-icons" /> Edit Title
+                      </Dropdown.Item>
+                      <Dropdown.Item onClick={() => handleDeleteSource(src.id)} className="text-danger">
+                        <MdDelete className="me-2 react-icons" /> Delete
+                      </Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
                 </div>
               </ListGroup.Item>
             ))}
           </ListGroup>
         ) : null}
       </div>
+
+      {/* Edit Title Modal */}
+      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Source Title</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {editError && (
+            <Alert variant="danger">
+              {editError}
+            </Alert>
+          )}
+          <Form>
+            <Form.Group>
+              <Form.Label>Title</Form.Label>
+              <Form.Control
+                type="text"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="Enter source title"
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleSaveEdit} disabled={loading}>
+            {loading ? (
+              <Spinner animation="border" size="sm" className="me-2" />
+            ) : null}
+            Save Changes
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Card>
   );
 }
