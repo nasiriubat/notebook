@@ -28,6 +28,7 @@ api.interceptors.request.use(
 // Authentication Endpoints
 export const registerUser = (data) => api.post("/register", data);
 export const loginUser = (data) => api.post("/login", data);
+export const changePassword = (data) => api.post("/reset-password", data);
 export const refreshToken = (data) => api.post("/generate-new-token", data);
 
 // Protected Routes (Notebook, Sources, Notes)

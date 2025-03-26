@@ -36,7 +36,7 @@ export default function NotebookList() {
   return (
     <div className="container">
       <section className="text-center mt-5">
-        <h1 className="display-5">Welcome to NotebookLM Clone</h1>
+        <h1 className="display-5">Welcome to ThinkSync</h1>
         {error && (
           <div className="alert alert-danger mt-3" role="alert">
             {error}
