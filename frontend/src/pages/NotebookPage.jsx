@@ -12,6 +12,7 @@ export default function NotebookPage() {
   const navigate = useNavigate();
   const { currentNotebook, getNotebook, loading } = useContext(NotebookContext);
   const [sources, setSources] = useState([]);
+  const [selectedSources, setSelectedSources] = useState([]);
 
   useEffect(() => {
     if (id && (!currentNotebook || currentNotebook.id !== parseInt(id))) {
@@ -33,6 +34,15 @@ export default function NotebookPage() {
       fetchSources();
     }
   }, [id]);
+
+  const handleSourceSelect = (selectedSourceIds) => {
+    if (!Array.isArray(selectedSourceIds)) {
+      console.error('selectedSourceIds is not an array');
+      return;
+    }
+    const selected = sources.filter(source => selectedSourceIds.includes(source.id));
+    setSelectedSources(selected);
+  };
 
   if (loading) {
     return (
@@ -75,10 +85,18 @@ export default function NotebookPage() {
         </div>
         <div className="row g-4">
           <div className="col-lg-3">
-            <SourceComponent notebookId={id} sources={sources} onSourcesUpdate={fetchSources} />
+            <SourceComponent 
+              notebookId={id} 
+              sources={sources} 
+              onSourcesUpdate={fetchSources}
+              onSourceSelect={handleSourceSelect}
+            />
           </div>
           <div className="col-lg-6">
-            <ChatComponent notebookId={id} />
+            <ChatComponent 
+              notebookId={id} 
+              selectedSources={selectedSources}
+            />
           </div>
           <div className="col-lg-3">
             <NoteComponent notebookId={id} onNoteAdded={fetchSources} />

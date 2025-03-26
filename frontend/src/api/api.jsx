@@ -41,7 +41,30 @@ export const updateNotebook = (id, data) => api.put(`/notebooks/${id}`, data);
 // Source endpoints
 export const getSources = (notebookId) => api.get(`/sources/${notebookId}`);
 export const createSource = (data) => api.post("/sources", data);
-export const uploadSource = (data) => api.post("/sources", data);
+export const uploadSource = (data) => {
+  // If data contains a file, use FormData
+  if (data.file) {
+    const formData = new FormData();
+    formData.append('file', data.file);
+    formData.append('notebook_id', data.notebook_id);
+    if (data.title) formData.append('title', data.title);
+    if (data.description) formData.append('description', data.description);
+    
+    // Create a new axios instance for this request with the correct content type
+    const fileApi = axios.create({
+      baseURL: API_BASE_URL,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${localStorage.getItem("token")}`
+      }
+    });
+    
+    return fileApi.post("/sources", formData);
+  }
+  
+  // For non-file uploads, use the regular api instance
+  return api.post("/sources", data);
+};
 export const deleteSource = (id) => api.delete(`/sources/${id}`);
 export const getSource = (id) => api.get(`/single-source/${id}`);
 export const updateSource = (id, data) => api.put(`/sources/${id}`, data);

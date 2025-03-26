@@ -8,10 +8,15 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 app.config.from_object(Config)
-CORS(app)
-# CORS(app, origins=["http://localhost:3000"])
 
-# CORS(app, origins=["http://example.com", "https://example.com"])
+# Configure CORS with specific settings
+CORS(app, resources={
+    r"/*": {
+        "origins": ["http://localhost:5173"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
@@ -26,6 +31,7 @@ from app.models.source import Source
 from app.controllers.auth_controller import register, login, change_password, forgot_password, reset_password, logout, generate_new_token
 from app.controllers.notebook_controller import create_notebook, get_notebooks, update_notebook, delete_notebook, get_notebook
 from app.controllers.source_controller import add_source, get_sources, update_source, delete_source, get_source
+from app.controllers.chat_controller import send_chat_message
 
 # Auth routes
 app.add_url_rule('/register', 'register', register, methods=['POST'])
@@ -49,3 +55,6 @@ app.add_url_rule('/sources/<int:notebook_id>', 'get_sources', get_sources, metho
 app.add_url_rule('/single-source/<int:source_id>', 'get_source', get_source, methods=['GET'])
 app.add_url_rule('/sources/<int:source_id>', 'update_source', update_source, methods=['PUT'])
 app.add_url_rule('/sources/<int:source_id>', 'delete_source', delete_source, methods=['DELETE'])
+
+# Chat routes
+app.add_url_rule('/chat', 'send_chat_message', send_chat_message, methods=['POST'])

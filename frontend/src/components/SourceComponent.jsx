@@ -29,14 +29,12 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
   const MAX_TEXT_LENGTH = 1000;
 
   useEffect(() => {
-    // Notify parent component of selected sources
-    if (onSourceSelect) {
-      const selectedSourceTexts = sources
-        .filter(source => selectedSources.has(source.id))
-        .map(source => source.description);
-      onSourceSelect(selectedSourceTexts);
+    // Only notify parent if selectedSources has changed and is not empty
+    if (onSourceSelect && selectedSources.size > 0) {
+      const selectedArray = Array.from(selectedSources);
+      onSourceSelect(selectedArray);
     }
-  }, [selectedSources, sources, onSourceSelect]);
+  }, [selectedSources]); // Remove onSourceSelect from dependencies
 
   const handleDrop = async (e) => {
     e.preventDefault();
@@ -94,11 +92,13 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
       }
 
       setUploading(true);
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("notebook_id", notebookId);
+      
+      // Pass the file directly to uploadSource
+      const response = await uploadSource({
+        file,
+        notebook_id: notebookId
+      });
 
-      const response = await uploadSource(formData);
       if (response.data.error) {
         setFileError(response.data.error);
         return;
