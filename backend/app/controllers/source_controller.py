@@ -4,7 +4,6 @@ import re
 from app.models.source import Source
 from app.utils.file_utils import process_input
 from app import db
-from app.services.file_storage_service import FileStorageService
 from app.utils.file_utils import (
     extract_text_from_pdf,
     extract_text_from_txt,
@@ -13,6 +12,7 @@ from app.utils.file_utils import (
     extract_text_from_webpage,
     extract_text_from_youtube,
 )
+import traceback
 
 ALLOWED_EXTENSIONS = {"pdf", "docx", "txt", "jpg", "jpeg", "png"}
 
@@ -36,104 +36,159 @@ def is_youtube_link(link):
 def add_source():
     data = request.form if request.files else request.get_json()
     file = request.files.get("file")
-    file_path = ""
     processed_data = {}
 
-    if file:
-        if not allowed_file(file.filename):
-            return jsonify(error="Invalid file type"), 400
+    try:
+        if file:
+            if not allowed_file(file.filename):
+                return jsonify(error="Invalid file type"), 400
+
+            # Process file directly without saving
+            file_extension = file.filename.rsplit(".", 1)[1].lower()
+            try:
+                if file_extension == "pdf":
+                    text = extract_text_from_pdf(file)
+                elif file_extension == "txt":
+                    text = extract_text_from_txt(file)
+                elif file_extension == "docx":
+                    text = extract_text_from_docx(file)
+                elif file_extension in ["jpg", "jpeg", "png"]:
+                    text = extract_text_from_image(file)
+                else:
+                    return jsonify(error="Unsupported file format"), 400
+
+                if not text or text.strip() == "":
+                    return jsonify(error="No text content could be extracted from the file"), 400
+
+                processed_data = {
+                    "text": text,
+                    "embedding": process_input(text)["embedding"],
+                    "file_extension": file_extension
+                }
+            except Exception as e:
+                print(f"Error processing file: {str(e)}")
+                print(traceback.format_exc())
+                return jsonify(error=f"Error processing file: {str(e)}"), 400
+
+        elif data.get("text"):
+            try:
+                processed_data = process_input(data.get("text"))
+                processed_data["file_extension"] = "txt"
+            except Exception as e:
+                print(f"Error processing text: {str(e)}")
+                print(traceback.format_exc())
+                return jsonify(error=f"Error processing text: {str(e)}"), 400
+
+        elif data.get("link"):
+            try:
+                if is_youtube_link(data.get("link")):
+                    text = extract_text_from_youtube(data.get("link"))
+                    processed_data = {
+                        "text": text,
+                        "embedding": process_input(text)["embedding"],
+                        "file_extension": "youtube"
+                    }
+                else:
+                    text = extract_text_from_webpage(data.get("link"))
+                    processed_data = {
+                        "text": text,
+                        "embedding": process_input(text)["embedding"],
+                        "file_extension": "url"
+                    }
+            except Exception as e:
+                print(f"Error processing link: {str(e)}")
+                print(traceback.format_exc())
+                return jsonify(error=f"Error processing link: {str(e)}"), 400
+        else:
+            return jsonify(error="No valid input provided"), 400
+
+        if not processed_data.get("text"):
+            return jsonify(error="No text content could be extracted"), 400
+
+        # Get first sentence as title
+        title = processed_data["text"].split(".")[0][:200]  # Limit title length
+        if not title:
+            title = "Untitled Source"
 
         try:
-            file_path = FileStorageService.save_file(file, file.filename)
-            # use process_input function from file_utils.py which returns [text, embedding]
-            processed_data = process_input(file_path)
-
+            source = Source(
+                notebook_id=data.get("notebook_id"),
+                file_type=processed_data["file_extension"],
+                title=title,
+                description=processed_data["text"],
+                is_note=str(data.get("is_note", "0")).lower() in ("true", "1", "yes")
+            )
+            db.session.add(source)
+            db.session.commit()
+            return jsonify(source.to_dict()), 201
         except Exception as e:
-            return jsonify(error=str(e)), 400
+            print(f"Error saving to database: {str(e)}")
+            print(traceback.format_exc())
+            db.session.rollback()
+            return jsonify(error=f"Error saving to database: {str(e)}"), 500
 
-    else:
-        if not data.get("text"):
-            return jsonify(error="Text is required"), 400
-
-        processed_data = process_input(data.get("text"))
-        #get first sentence of text as title
-        
-    print(processed_data)
-
-    data["title"] = processed_data["text"].split(".")[0]
-    data["text"] = processed_data["text"]
-    data["embedding"] = processed_data["embedding"]
-    data["file_extension"] = processed_data["file_extension"]
-
-    source = Source(
-        notebook_id=data.get("notebook_id"),
-        file_type=data.get("file_extension"),
-        title=data.get("title"),
-        description=data.get("text"),
-        file_path=file_path,
-        faiss_file_name=data.get("faiss_file_name", ""),
-    )
-    db.session.add(source)
-    db.session.commit()
-    return jsonify(id=source.id), 201
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify(error=f"Unexpected error: {str(e)}"), 500
 
 
 @jwt_required()
 def get_sources(notebook_id):
-    sources = Source.query.filter_by(notebook_id=notebook_id).all()
-    return (
-        jsonify(
-            [
-                {"id": s.id, "title": s.title, "description": s.description}
-                for s in sources
-            ]
-        ),
-        200,
-    )
+    try:
+        sources = Source.query.filter_by(notebook_id=notebook_id).all()
+        return jsonify([source.to_dict() for source in sources]), 200
+    except Exception as e:
+        print(f"Error fetching sources: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify(error=f"Error fetching sources: {str(e)}"), 500
 
 
 @jwt_required()
 def update_source(source_id):
-    data = request.get_json()
-    source = Source.query.filter_by(id=source_id).first()
-    if source:
-        source.title = data.get("title", source.title)
-        source.description = data.get("description", source.description)
-        db.session.commit()
-        return jsonify(id=source.id, title=source.title), 200
-    return jsonify(error="Source not found"), 404
+    try:
+        data = request.get_json()
+        source = Source.query.filter_by(id=source_id).first()
+        if source:
+            source.title = data.get("title", source.title)
+            source.description = data.get("description", source.description)
+            source.is_note = data.get("is_note", source.is_note)
+            db.session.commit()
+            return jsonify(source.to_dict()), 200
+        return jsonify(error="Source not found"), 404
+    except Exception as e:
+        print(f"Error updating source: {str(e)}")
+        print(traceback.format_exc())
+        db.session.rollback()
+        return jsonify(error=f"Error updating source: {str(e)}"), 500
 
 
 @jwt_required()
 def get_source(source_id):
-    source = Source.query.filter_by(id=source_id).first()
-    if source:
-        # check if souce belong to logged in user
-        user_id = int(get_jwt_identity())
-        print(user_id)
-        print(source.notebook.user_id)
-        print(source.notebook.user_id == user_id)
-
-        if source.notebook.user_id == user_id:
-            return (
-                jsonify(
-                    {
-                        "id": source.id,
-                        "title": source.title,
-                        "description": source.description,
-                    }
-                ),
-                200,
-            )
-
-    return jsonify(error="Source not found"), 404
+    try:
+        source = Source.query.filter_by(id=source_id).first()
+        if source:
+            user_id = int(get_jwt_identity())
+            if source.notebook.user_id == user_id:
+                return jsonify(source.to_dict()), 200
+        return jsonify(error="Source not found"), 404
+    except Exception as e:
+        print(f"Error fetching source: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify(error=f"Error fetching source: {str(e)}"), 500
 
 
 @jwt_required()
 def delete_source(source_id):
-    source = Source.query.filter_by(id=source_id).first()
-    if source:
-        db.session.delete(source)
-        db.session.commit()
-        return jsonify(message="Source deleted"), 200
-    return jsonify(error="Source not found"), 404
+    try:
+        source = Source.query.filter_by(id=source_id).first()
+        if source:
+            db.session.delete(source)
+            db.session.commit()
+            return jsonify(message="Source deleted"), 200
+        return jsonify(error="Source not found"), 404
+    except Exception as e:
+        print(f"Error deleting source: {str(e)}")
+        print(traceback.format_exc())
+        db.session.rollback()
+        return jsonify(error=f"Error deleting source: {str(e)}"), 500

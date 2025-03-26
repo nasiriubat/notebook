@@ -6,15 +6,29 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (token && storedUser) {
-      setUser(storedUser);
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      startSilentRefresh();
-    }
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const storedUser = JSON.parse(localStorage.getItem("user"));
+        if (token && storedUser) {
+          setUser(storedUser);
+          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+          startSilentRefresh();
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("Auth check error:", error);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
   }, []);
 
   // Start silent refresh in background
@@ -105,7 +119,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register }}>
+    <AuthContext.Provider value={{ user, login, logout, register, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

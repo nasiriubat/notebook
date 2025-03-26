@@ -20,8 +20,8 @@ export const NotebookProvider = ({ children }) => {
       setNotebooks(response.data.reverse());
       setError(null);
     } catch (err) {
-      setError("Failed to fetch notebooks");
       console.error("Error fetching notebooks:", err);
+      setError(null);
     } finally {
       setLoading(false);
     }
@@ -30,12 +30,16 @@ export const NotebookProvider = ({ children }) => {
   const addNotebook = async (name) => {
     try {
       setLoading(true);
-      await createNotebook({ name });
-      await fetchNotebooks();
       setError(null);
+      const data = { name: name.trim() };
+      console.log('Creating notebook with data:', data);
+      const response = await createNotebook(data);
+      console.log('Notebook creation response:', response);
+      await fetchNotebooks();
     } catch (err) {
-      setError("Failed to create notebook");
       console.error("Error creating notebook:", err);
+      console.error("Error response:", err.response);
+      setError(err.response?.data?.message || err.message || "Failed to create notebook");
     } finally {
       setLoading(false);
     }
@@ -48,22 +52,8 @@ export const NotebookProvider = ({ children }) => {
       await fetchNotebooks();
       setError(null);
     } catch (err) {
-      setError("Failed to delete notebook");
+      setError(err.response?.data?.message || null);
       console.error("Error deleting notebook:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchNotebookById = async (id) => {
-    try {
-      setLoading(true);
-      const response = await getNotebookById(id);
-      setCurrentNotebook(response.data);
-      setError(null);
-    } catch (err) {
-      setError("Failed to fetch notebook details");
-      console.error("Error fetching notebook:", err);
     } finally {
       setLoading(false);
     }
@@ -76,25 +66,40 @@ export const NotebookProvider = ({ children }) => {
       await fetchNotebooks();
       setError(null);
     } catch (err) {
-      setError("Failed to update notebook");
+      setError(err.response?.data?.message || null);
       console.error("Error updating notebook:", err);
     } finally {
       setLoading(false);
     }
   };
 
+  const getNotebook = async (id) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await getNotebookById(id);
+      setCurrentNotebook(response.data);
+    } catch (err) {
+      console.error("Error fetching notebook:", err);
+      setError(err.response?.data?.message || "Failed to fetch notebook");
+      setCurrentNotebook(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <NotebookContext.Provider 
-      value={{ 
-        notebooks, 
+    <NotebookContext.Provider
+      value={{
+        notebooks,
         currentNotebook,
         loading,
         error,
-        addNotebook, 
+        addNotebook,
         removeNotebook,
-        fetchNotebookById,
         updateNotebookDetails,
-        fetchNotebooks
+        getNotebook,
+        refreshNotebooks: fetchNotebooks
       }}
     >
       {children}

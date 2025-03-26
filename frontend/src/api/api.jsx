@@ -14,6 +14,12 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log('Request config:', {
+      url: config.url,
+      method: config.method,
+      headers: config.headers,
+      data: config.data
+    });
     return config;
   },
   (error) => Promise.reject(error)
@@ -31,16 +37,21 @@ export const deleteNotebook = (id) => api.delete(`/notebooks/${id}`);
 export const getNotebookById = (id) => api.get(`/notebooks/${id}`);
 export const updateNotebook = (id, data) => api.put(`/notebooks/${id}`, data);
 
-export const getSources = () => api.get("/source");
-export const uploadSource = (data) => api.post("/source", data);
-export const deleteSource = (id) => api.delete(`/source/${id}`);
+// Source endpoints
+export const getSources = (notebookId) => api.get(`/sources/${notebookId}`);
+export const createSource = (data) => api.post("/sources", data);
+export const uploadSource = (data) => api.post("/sources", data);
+export const deleteSource = (id) => api.delete(`/sources/${id}`);
+export const getSource = (id) => api.get(`/single-source/${id}`);
+export const updateSource = (id, data) => api.put(`/sources/${id}`, data);
 
+// Note endpoints (legacy, will be removed)
 export const getNotes = () => api.get("/note");
 export const createNote = (data) => api.post("/note", data);
 export const deleteNote = (id) => api.delete(`/note/${id}`);
 export const getNoteById = (id) => api.get(`/note/${id}`);
 export const updateNote = (id, data) => api.put(`/note/${id}`, data);
 
+// Chat endpoints
 export const sendChatMessage = (data) => api.post("/chat", data);
 export const getChatMessages = () => api.get("/chat");
-

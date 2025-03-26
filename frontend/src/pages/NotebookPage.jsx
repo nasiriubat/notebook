@@ -9,35 +9,37 @@ import { NotebookContext } from "../context/NotebookContext";
 export default function NotebookPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { currentNotebook, fetchNotebookById, loading, error } = useContext(NotebookContext);
+  const { currentNotebook, getNotebook, loading } = useContext(NotebookContext);
 
   useEffect(() => {
-    fetchNotebookById(id);
-  }, [id]);
+    if (id && (!currentNotebook || currentNotebook.id !== parseInt(id))) {
+      getNotebook(id);
+    }
+  }, [id, currentNotebook, getNotebook]);
 
   if (loading) {
     return (
       <div>
         <Navbar />
-        <div className="container d-flex justify-content-center align-items-center" style={{ height: "80vh" }}>
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
+        <div className="container mt-4">
+          <div className="d-flex justify-content-center">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  if (error || !currentNotebook) {
+  if (!currentNotebook) {
     return (
       <div>
         <Navbar />
         <div className="container mt-4">
-          <div className="alert alert-danger" role="alert">
-            {error || "Notebook not found"}
-          </div>
+          <div className="alert alert-danger">Notebook not found</div>
           <button className="btn btn-primary" onClick={() => navigate("/")}>
-            Back to Home
+            Back to Notebooks
           </button>
         </div>
       </div>

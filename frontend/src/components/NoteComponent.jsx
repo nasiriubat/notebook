@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
-import { getNotes, createNote, deleteNote, updateNote } from "../api/api";
+import { getSources, createSource, deleteSource } from "../api/api";
+import { MdClose } from "react-icons/md";
 
 export default function NoteComponent({ notebookId }) {
   const [notes, setNotes] = useState([]);
+  const [title, setTitle] = useState("");
   const [noteText, setNoteText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [editingNote, setEditingNote] = useState(null);
 
   useEffect(() => {
     fetchNotes();
@@ -16,28 +17,63 @@ export default function NoteComponent({ notebookId }) {
   const fetchNotes = async () => {
     try {
       setLoading(true);
-      const response = await getNotes(notebookId);
-      setNotes(response.data.reverse());
+      const response = await getSources(notebookId);
+      // Filter only notes from sources
+      const notes = response.data.filter(source => source.is_note).reverse();
+      setNotes(notes);
       setError(null);
     } catch (err) {
-      setError("Failed to fetch notes");
       console.error("Error fetching notes:", err);
+      setError(null);
     } finally {
       setLoading(false);
     }
   };
 
   const handleAddNote = async () => {
-    if (!noteText.trim() || saving) return;
+    if (!title.trim() || !noteText.trim() || saving) return;
 
     try {
       setSaving(true);
-      await createNote({ notebookId, text: noteText });
+      setError(null);
+      
+      if (title.length > 200) {
+        setError(`Title cannot exceed 200 characters. Current length: ${title.length}`);
+        return;
+      }
+
+      if (noteText.length > 1000) {
+        setError(`Note text cannot exceed 1000 characters. Current length: ${noteText.length}`);
+        return;
+      }
+
+      // Create a temporary file path for the note
+      const tempFilePath = `notes/${Date.now()}_${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
+      
+      await createSource({
+        notebookId,
+        title,
+        description: noteText,
+        fileType: 'text',
+        filePath: tempFilePath,
+        faissFileName: '', // Not needed for notes
+        isNote: true
+      });
+
+      setTitle("");
       setNoteText("");
       await fetchNotes();
-      setError(null);
     } catch (err) {
-      setError("Failed to create note");
+      const errorMessage = err.response?.data?.message;
+      if (errorMessage) {
+        setError(errorMessage);
+      } else if (err.response?.status === 413) {
+        setError("Note is too long. Maximum length is 1000 characters.");
+      } else if (err.response?.status === 400) {
+        setError("Invalid note content. Please check your input.");
+      } else {
+        setError("Failed to create note. Please try again.");
+      }
       console.error("Error creating note:", err);
     } finally {
       setSaving(false);
@@ -49,27 +85,12 @@ export default function NoteComponent({ notebookId }) {
 
     try {
       setLoading(true);
-      await deleteNote(id);
+      await deleteSource(id);
       await fetchNotes();
       setError(null);
     } catch (err) {
-      setError("Failed to delete note");
+      setError(err.response?.data?.message || null);
       console.error("Error deleting note:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateNote = async (id, text) => {
-    try {
-      setLoading(true);
-      await updateNote(id, { text });
-      await fetchNotes();
-      setEditingNote(null);
-      setError(null);
-    } catch (err) {
-      setError("Failed to update note");
-      console.error("Error updating note:", err);
     } finally {
       setLoading(false);
     }
@@ -104,68 +125,61 @@ export default function NoteComponent({ notebookId }) {
         </div>
       )}
       <div className="note-input mb-3">
+        <div className="mb-2">
+          <input
+            type="text"
+            className="form-control"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Enter note title..."
+            disabled={saving}
+          />
+        </div>
+        
         <textarea
           className="form-control"
-          rows="2"
+          rows="3"
           value={noteText}
           onChange={(e) => setNoteText(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="Add a new note..."
           disabled={saving}
         />
+        <div className="d-flex justify-content-between align-items-center mb-1">
+          <small className="text-muted">Maximum 1000 characters</small>
+          <small className={`${noteText.length > 1000 ? 'text-danger' : 'text-muted'}`}>
+            {noteText.length}/1000
+          </small>
+        </div>
         <button
           className="btn btn-primary w-100 mt-2"
           onClick={handleAddNote}
-          disabled={saving || !noteText.trim()}
+          disabled={saving || !title.trim() || !noteText.trim()}
         >
           {saving ? (
             <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
           ) : null}
-          Add Note
+          Add to Source
         </button>
       </div>
-      <div className="notes-list" style={{ overflowY: "auto", maxHeight: "calc(100% - 200px)" }}>
+      <div className="notes-list" style={{ overflowY: "auto", maxHeight: "calc(100% - 250px)" }}>
         {notes.length > 0 ? (
           <div className="list-group">
             {notes.map((note) => (
               <div key={note.id} className="list-group-item">
-                {editingNote === note.id ? (
-                  <div>
-                    <textarea
-                      className="form-control mb-2"
-                      rows="3"
-                      defaultValue={note.text}
-                      onBlur={(e) => handleUpdateNote(note.id, e.target.value)}
-                    />
-                    <div className="d-flex justify-content-end gap-2">
-                      <button
-                        className="btn btn-sm btn-outline-secondary"
-                        onClick={() => setEditingNote(null)}
-                      >
-                        Cancel
-                      </button>
-                    </div>
+                <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start gap-2">
+                  <div className="flex-grow-1">
+                    <h6 className="mb-1">{note.title}</h6>
+                    <p className="mb-0">{note.description}</p>
                   </div>
-                ) : (
-                  <div className="d-flex justify-content-between align-items-start">
-                    <p className="mb-0">{note.text}</p>
-                    <div className="btn-group">
-                      <button
-                        className="btn btn-sm btn-outline-primary"
-                        onClick={() => setEditingNote(note.id)}
-                      >
-                        <i className="bi bi-pencil"></i>
-                      </button>
-                      <button
-                        className="btn btn-sm btn-outline-danger"
-                        onClick={() => handleDeleteNote(note.id)}
-                        disabled={loading}
-                      >
-                        <i className="bi bi-trash"></i>
-                      </button>
-                    </div>
-                  </div>
-                )}
+                  <button
+                    className="btn btn-sm "
+                    onClick={() => handleDeleteNote(note.id)}
+                    disabled={loading}
+                  >
+                    <MdClose className="react-icons border-none" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>

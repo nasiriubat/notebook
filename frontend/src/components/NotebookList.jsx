@@ -1,6 +1,7 @@
 import { useContext, useState } from "react";
 import { NotebookContext } from "../context/NotebookContext";
 import NotebookCard from "./NotebookCard";
+import { MdAdd } from "react-icons/md";
 
 export default function NotebookList() {
   const { notebooks, addNotebook, loading, error } = useContext(NotebookContext);
@@ -13,6 +14,13 @@ export default function NotebookList() {
     await addNotebook(name);
     setName("");
     setIsCreating(false);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleCreateNotebook();
+    }
   };
 
   if (loading && notebooks.length === 0) {
@@ -34,30 +42,38 @@ export default function NotebookList() {
             {error}
           </div>
         )}
-        <div className="mt-3">
-          <div className="input-group w-50 mx-auto">
-            <input
-              type="text"
-              placeholder="Enter Notebook Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="form-control"
-              disabled={isCreating}
-            />
-            <button 
-              onClick={handleCreateNotebook} 
-              className="btn btn-primary"
-              disabled={isCreating || !name.trim()}
-            >
-              {isCreating ? (
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-              ) : null}
-              Create Notebook
-            </button>
+        <div className="mt-4">
+          <div className="mx-auto" style={{ maxWidth: "500px" }}>
+            <div className="d-flex flex-column flex-md-row gap-2">
+              <div className="flex-grow-1">
+                <input
+                  type="text"
+                  placeholder="Enter Notebook Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="form-control form-control-lg"
+                  disabled={isCreating}
+                />
+              </div>
+              <button 
+                onClick={handleCreateNotebook} 
+                className="btn btn-primary btn-lg d-flex align-items-center justify-content-center gap-2"
+                disabled={isCreating || !name.trim()}
+                style={{ minWidth: "140px" }}
+              >
+                {isCreating ? (
+                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                ) : (
+                  <MdAdd size={24} />
+                )}
+                Create
+              </button>
+            </div>
           </div>
         </div>
       </section>
-      <div className="container mt-4">
+      <div className="container mt-5">
         <div className="row">
           {notebooks.length > 0 ? (
             notebooks.map((notebook) => (

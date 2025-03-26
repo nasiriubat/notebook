@@ -16,7 +16,12 @@ def create_notebook():
 def get_notebooks():
     user_id = get_jwt_identity()
     notebooks = Notebook.query.filter_by(user_id=user_id).all()
-    return jsonify([{"id": nb.id, "name": nb.name} for nb in notebooks]), 200
+    return jsonify([{
+        "id": nb.id, 
+        "name": nb.name,
+        "createdAt": nb.created_at.isoformat() if nb.created_at else None,
+        "sourceCount": len(nb.sources)
+    } for nb in notebooks]), 200
 
 @jwt_required()
 def update_notebook(notebook_id):
