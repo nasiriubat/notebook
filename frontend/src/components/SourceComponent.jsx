@@ -403,11 +403,11 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
           <Alert variant="warning" className="mb-3 py-2">
             <small className="d-block mb-1">
               <i className="bi bi-exclamation-triangle me-1"></i>
-              Allowed file types: {ALLOWED_FILE_TYPES.join(', ')}
+              {ALLOWED_FILE_TYPES.join(', ')}
             </small>
             <small className="d-block">
               <i className="bi bi-exclamation-triangle me-1"></i>
-              Maximum file size: 10MB
+              Max: 10MB
             </small>
           </Alert>
           {fileError && (

@@ -79,10 +79,10 @@ export default function NoteComponent({ notebookId, onNoteAdded }) {
         </div>
         <div className="d-flex gap-2">
           <Button variant="outline-secondary" className="flex-grow-1" onClick={handlePaste}>
-            <MdContentPaste className="me-1 react-icons" style={{ fontSize: '1rem' }} /> Paste
+            <MdContentPaste className="me-1 react-icons" style={{ fontSize: '1rem' }} /> 
           </Button>
           <Button variant="primary" className="flex-grow-1" onClick={handleAddNote} disabled={uploading}>
-            <MdSend className="me-1 react-icons" style={{ fontSize: '1rem' }} /> Add to sources
+             Add to sources
           </Button>
         </div>
       </div>

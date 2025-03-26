@@ -94,19 +94,9 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
     setError(null);
 
     try {
-      // Find the last user message before this bot message
-      let lastUserMessage = null;
-      for (let i = messageIndex - 1; i >= 0; i--) {
-        if (messages[i].role === "user") {
-          lastUserMessage = messages[i];
-          break;
-        }
-      }
-
-      if (!lastUserMessage) {
-        setError("Could not find the original question");
-        return;
-      }
+      // Get the user message that preceded this bot message
+      const userMessage = messages[messageIndex - 1];
+      if (!userMessage) return;
 
       // Prepare context from selected sources
       const context = selectedSources.length > 0
@@ -116,8 +106,8 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
       // Send message to backend with proper format
       const response = await sendChatMessage({
         context,
-        query: lastUserMessage.content.trim(),
-        regenerate: true
+        query: userMessage.content.trim(),
+        regenerate: true  // Add flag to indicate this is a regeneration
       });
       
       // Add new bot response after the existing messages
