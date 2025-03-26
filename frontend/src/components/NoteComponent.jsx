@@ -3,7 +3,7 @@ import { uploadSource } from "../api/api";
 import { MdContentPaste, MdSend } from "react-icons/md";
 import { Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 
-export default function NoteComponent({ notebookId }) {
+export default function NoteComponent({ notebookId, onNoteAdded }) {
   const [noteText, setNoteText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -33,6 +33,9 @@ export default function NoteComponent({ notebookId }) {
       }
 
       setNoteText("");
+      if (onNoteAdded) {
+        onNoteAdded();
+      }
     } catch (err) {
       console.error("Error creating note:", err);
       const errorMessage = err.response?.data?.error || err.message || "Failed to create note";

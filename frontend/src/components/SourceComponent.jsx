@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getSources, uploadSource, deleteSource, updateSource } from "../api/api";
-import { MdSend, MdContentPaste, MdClose, MdCloudUpload, MdMoreVert, MdEdit, MdDelete } from "react-icons/md";
+import { MdSend, MdContentPaste, MdClose, MdCloudUpload, MdMoreVert, MdEdit, MdDelete, MdContentCopy } from "react-icons/md";
 import { Card, Form, Button, Alert, Spinner, ListGroup, Modal, Dropdown } from 'react-bootstrap';
 import { NotebookContext } from "../context/NotebookContext";
 import { useContext } from "react";
@@ -322,6 +322,15 @@ export default function SourceComponent({ notebookId, onSourceSelect }) {
     }
   };
 
+  const handleCopyDescription = async (description) => {
+    try {
+      await navigator.clipboard.writeText(description);
+      // You could add a toast notification here if you want
+    } catch (err) {
+      setError("Failed to copy to clipboard");
+    }
+  };
+
   if (loading && sources.length === 0) {
     return (
       <Card className="p-3">
@@ -489,29 +498,27 @@ export default function SourceComponent({ notebookId, onSourceSelect }) {
           <ListGroup>
             {sources.map((src) => (
               <ListGroup.Item key={src.id} className="d-flex justify-content-between align-items-center">
-                <div className="d-flex align-items-center">
+                <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                   <Form.Check
                     type="checkbox"
                     className="me-2"
                     checked={selectedSources.has(src.id)}
                     onChange={() => handleSourceSelect(src.id)}
                   />
-                  <div className="d-flex flex-column">
-                    <span>{src.title}</span>
-                    {src.is_note && (
-                      <small className="text-warning">
-                        <i className="bi bi-exclamation-triangle me-1"></i>
-                        Note
-                      </small>
-                    )}
+                  <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
+                    <span className="text-truncate" style={{ maxWidth: '250px' }}>{src.title}</span>
+                    
                   </div>
                 </div>
-                <div className="d-flex gap-2">
+                <div className="d-flex align-items-center ms-2">
                   <Dropdown>
                     <Dropdown.Toggle variant="link" className="p-0" style={{ boxShadow: 'none' }}>
                       <MdMoreVert className="react-icons" />
                     </Dropdown.Toggle>
                     <Dropdown.Menu align="end">
+                      <Dropdown.Item onClick={() => handleCopyDescription(src.description)}>
+                        <MdContentCopy className="me-2 react-icons" /> Copy Text
+                      </Dropdown.Item>
                       <Dropdown.Item onClick={() => handleEditSource(src)}>
                         <MdEdit className="me-2 react-icons" /> Edit Title
                       </Dropdown.Item>
