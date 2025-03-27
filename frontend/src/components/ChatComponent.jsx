@@ -142,69 +142,67 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
         </Alert>
       )}
       <div 
-        className="chat-box flex-grow-1 d-flex flex-column-reverse overflow-auto mb-3"
-        style={{ 
-          height: "calc(100% - 150px)",
-          scrollBehavior: "smooth"
-        }}
+        className="chat-box flex-grow-1 d-flex flex-column mb-3"
       >
-        <div className="d-flex flex-column">
-          {!selectedSources?.length ? (
-            <div className="text-center text-muted py-5">
-              <i className="bi bi-chat-dots display-4 mb-3"></i>
-              <p className="mb-0">Select sources to start the conversation</p>
-            </div>
-          ) : messages.length === 0 ? (
-            <div className="text-center text-muted py-5">
-              <i className="bi bi-chat-dots display-4 mb-3"></i>
-              <p className="mb-0">Start a conversation with your sources</p>
-            </div>
-          ) : (
-            messages.map((message, index) => (
-              <div
-                key={index}
-                className={`message-wrapper ${message.role === "user" ? "user-message-wrapper" : "bot-message-wrapper"}`}
-              >
-                <div className={`message ${message.role === "user" ? "user-message" : "bot-message"}`}>
-                  <div className="message-content">
-                    {message.content}
-                    {message.role === "assistant" && (
-                      <div className="message-actions">
-                        <Button
-                          variant="outline-secondary"
-                          size="sm"
-                          className="action-button"
-                          onClick={() => handleCopyMessage(message.content)}
-                          title="Copy message"
-                        >
-                          <FaCopy />
-                        </Button>
-                        <Button
-                          variant="outline-secondary"
-                          size="sm"
-                          className="action-button"
-                          onClick={() => handleAddToSource(message.content)}
-                          title="Add to sources"
-                        >
-                          <FaPlus />
-                        </Button>
-                        <Button
-                          variant="outline-secondary"
-                          size="sm"
-                          className="action-button"
-                          onClick={() => handleRegenerate(index)}
-                          title="Regenerate response"
-                        >
-                          <FaRedo />
-                        </Button>
-                      </div>
-                    )}
+        <div className="chat-messages">
+          <div className="d-flex flex-column">
+            {!selectedSources?.length ? (
+              <div className="text-center text-muted py-5">
+                <i className="bi bi-chat-dots display-4 mb-3"></i>
+                <p className="mb-0">Select sources to start the conversation</p>
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="text-center text-muted py-5">
+                <i className="bi bi-chat-dots display-4 mb-3"></i>
+                <p className="mb-0">Start a conversation with your sources</p>
+              </div>
+            ) : (
+              messages.map((message, index) => (
+                <div
+                  key={index}
+                  className={`message-wrapper ${message.role === "user" ? "user-message-wrapper" : "bot-message-wrapper"}`}
+                >
+                  <div className={`message ${message.role === "user" ? "user-message" : "bot-message"}`}>
+                    <div className="message-content">
+                      {message.content}
+                      {message.role === "assistant" && (
+                        <div className="message-actions">
+                          <Button
+                            variant="outline-secondary"
+                            size="sm"
+                            className="action-button"
+                            onClick={() => handleCopyMessage(message.content)}
+                            title="Copy message"
+                          >
+                            <FaCopy />
+                          </Button>
+                          <Button
+                            variant="outline-secondary"
+                            size="sm"
+                            className="action-button"
+                            onClick={() => handleAddToSource(message.content)}
+                            title="Add to sources"
+                          >
+                            <FaPlus />
+                          </Button>
+                          <Button
+                            variant="outline-secondary"
+                            size="sm"
+                            className="action-button"
+                            onClick={() => handleRegenerate(index)}
+                            title="Regenerate response"
+                          >
+                            <FaRedo />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
-          )}
-          <div ref={messagesEndRef} />
+              ))
+            )}
+            <div ref={messagesEndRef} />
+          </div>
         </div>
       </div>
       <div className="chat-input mt-auto">

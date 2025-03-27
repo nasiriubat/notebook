@@ -400,10 +400,10 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
               {uploading ? "Uploading..." : "Drag & drop files here or click to upload"}
             </div>
           </div>
-          <Alert variant="warning" className="mb-3 py-2">
+          <Alert variant="warning" className="mb-3 py-2 text-center">
             <small className="d-block mb-1">
               <i className="bi bi-exclamation-triangle me-1"></i>
-              {ALLOWED_FILE_TYPES.join(', ')}
+              {ALLOWED_FILE_TYPES.join(', ')} 
             </small>
             <small className="d-block">
               <i className="bi bi-exclamation-triangle me-1"></i>
