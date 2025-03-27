@@ -209,7 +209,7 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
         <div className="input-group">
           <textarea
             className="form-control"
-            rows="2"
+            rows="1"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyPress={handleKeyPress}
@@ -222,9 +222,10 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
             disabled={sending || !query.trim() || !selectedSources?.length}
           >
             {sending ? (
-              <Spinner animation="border" size="sm" className="me-2" />
-            ) : null}
-            <FaPaperPlane />
+              <Spinner animation="border" size="sm" />
+            ) : (
+              <FaPaperPlane />
+            )}
           </Button>
         </div>
       </div>
