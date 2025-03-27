@@ -5,7 +5,7 @@ import { Card, Form, Button, Alert, Spinner, ListGroup, Modal, Dropdown } from '
 import { NotebookContext } from "../context/NotebookContext";
 import { useContext } from "react";
 
-export default function SourceComponent({ notebookId, onSourceSelect, sources, onSourcesUpdate }) {
+export default function SourceComponent({ notebookId, onSourceSelect, sources, onSourcesUpdate, onSourceDeleted }) {
   const { refreshNotebooks } = useContext(NotebookContext);
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -243,10 +243,10 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
         setError(response.data.error);
         return;
       }
-      if (onSourcesUpdate) {
-        onSourcesUpdate();
+      // Notify parent component about the deleted source
+      if (onSourceDeleted) {
+        onSourceDeleted(id);
       }
-      await refreshNotebooks();
       setError(null);
     } catch (err) {
       console.error("Error deleting source:", err);

@@ -13,6 +13,7 @@ export default function NotebookPage() {
   const { currentNotebook, getNotebook, loading } = useContext(NotebookContext);
   const [sources, setSources] = useState([]);
   const [selectedSources, setSelectedSources] = useState([]);
+  const [chatKey, setChatKey] = useState(0);
 
   useEffect(() => {
     if (id && (!currentNotebook || currentNotebook.id !== parseInt(id))) {
@@ -50,6 +51,11 @@ export default function NotebookPage() {
 
   const handleSourceAdded = useCallback((newSource) => {
     setSources(prev => [newSource, ...prev]);
+  }, []);
+
+  const handleSourceDeleted = useCallback((deletedSourceId) => {
+    setSources(prev => prev.filter(source => source.id !== deletedSourceId));
+    setSelectedSources(prev => prev.filter(source => source.id !== deletedSourceId));
   }, []);
 
   if (loading) {
@@ -98,14 +104,15 @@ export default function NotebookPage() {
               sources={sources} 
               onSourcesUpdate={handleSourceUpdate}
               onSourceSelect={handleSourceSelect}
+              onSourceDeleted={handleSourceDeleted}
             />
           </div>
           <div className="col-lg-6">
             <ChatComponent 
+              key={chatKey}
               notebookId={id} 
               selectedSources={selectedSources}
               onSourceAdded={handleSourceAdded}
-              key={`chat-${id}-${selectedSources.map(s => s.id).join('-')}`}
             />
           </div>
           <div className="col-lg-3">
