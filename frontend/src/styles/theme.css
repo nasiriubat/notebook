@@ -1,0 +1,279 @@
+:root {
+  /* Light theme variables */
+  --primary: #2563EB;
+  --primary-dark: #1E40AF;
+  --primary-light: #60A5FA;
+  --secondary: #F3F4F6;
+  --accent: #10B981;
+  --background: #FFFFFF;
+  --surface: #F9FAFB;
+  --text: #1F2937;
+  --text-secondary: #6B7280;
+  --border: #E5E7EB;
+  --error: #EF4444;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --info: #3B82F6;
+  --chat-user: #2563EB;
+  --chat-bot: #F3F4F6;
+  --message-actions: #E5E7EB;
+  --hover: #F3F4F6;
+  --active: #E5E7EB;
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] {
+  --primary: #3B82F6;
+  --primary-dark: #2563EB;
+  --primary-light: #60A5FA;
+  --secondary: #1F2937;
+  --accent: #10B981;
+  --background: #111827;
+  --surface: #1F2937;
+  --text: #F9FAFB;
+  --text-secondary: #9CA3AF;
+  --border: #374151;
+  --error: #EF4444;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --info: #3B82F6;
+  --chat-user: #3B82F6;
+  --chat-bot: #1F2937;
+  --message-actions: #374151;
+  --hover: #374151;
+  --active: #4B5563;
+  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Global styles */
+body {
+  background-color: var(--background);
+  color: var(--text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Card styles */
+.card {
+  background-color: var(--surface);
+  border-color: var(--border);
+  box-shadow: var(--shadow);
+}
+
+/* Button styles */
+.btn-primary {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-outline-primary {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* Form controls */
+.form-control {
+  background-color: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.form-control:focus {
+  background-color: var(--surface);
+  border-color: var(--primary);
+  color: var(--text);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+/* List group */
+.list-group-item {
+  background-color: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.list-group-item:hover {
+  background-color: var(--hover);
+}
+
+/* Chat messages */
+.user-message {
+  background-color: var(--chat-user);
+  color: white;
+}
+
+.bot-message {
+  background-color: var(--chat-bot);
+  color: var(--text);
+}
+
+/* Message actions */
+.message-actions {
+  border-color: var(--message-actions);
+}
+
+.action-button {
+  background-color: var(--surface);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+.action-button:hover {
+  background-color: var(--hover);
+  border-color: var(--active);
+  color: var(--text);
+}
+
+/* Navbar */
+.navbar {
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-3) 0;
+}
+
+.navbar-brand {
+  color: var(--text);
+  font-weight: 600;
+  font-size: var(--text-xl);
+}
+
+.nav-link {
+  color: var(--text-secondary);
+  transition: var(--transition-colors);
+}
+
+.nav-link:hover {
+  color: var(--text);
+}
+
+/* Dropdown */
+.dropdown-menu {
+  background-color: var(--surface);
+  border-color: var(--border);
+  box-shadow: var(--shadow-lg);
+}
+
+.dropdown-item {
+  color: var(--text);
+  transition: var(--transition-colors);
+}
+
+.dropdown-item:hover {
+  background-color: var(--hover);
+  color: var(--text);
+}
+
+/* Button styles */
+.btn-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: var(--transition-colors);
+}
+
+.btn-link:hover {
+  color: var(--text);
+}
+
+/* Modal */
+.modal-content {
+  background-color: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.modal-header {
+  border-bottom-color: var(--border);
+}
+
+.modal-footer {
+  border-top-color: var(--border);
+}
+
+/* Alert styles */
+.alert {
+  background-color: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.alert-info {
+  background-color: var(--info);
+  border-color: var(--info);
+  color: white;
+}
+
+.alert-success {
+  background-color: var(--success);
+  border-color: var(--success);
+  color: white;
+}
+
+.alert-warning {
+  background-color: var(--warning);
+  border-color: var(--warning);
+  color: white;
+}
+
+.alert-danger {
+  background-color: var(--error);
+  border-color: var(--error);
+  color: white;
+}
+
+/* Text colors */
+.text-muted {
+  color: var(--text-secondary) !important;
+}
+
+/* Background colors */
+.bg-light {
+  background-color: var(--surface) !important;
+}
+
+.bg-dark {
+  background-color: var(--background) !important;
+}
+
+/* Border colors */
+.border {
+  border-color: var(--border) !important;
+}
+
+/* Shadow utilities */
+.shadow-sm {
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.shadow-md {
+  box-shadow: var(--shadow-md) !important;
+}
+
+.shadow-lg {
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.shadow-xl {
+  box-shadow: var(--shadow-xl) !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--active);
+} 

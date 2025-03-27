@@ -1,17 +1,21 @@
 import { createContext, useState, useEffect } from "react";
 import { getNotebooks, createNotebook, deleteNotebook, getNotebookById, updateNotebook } from "../api/api";
+import { useAuth } from "./AuthContext";
 
 export const NotebookContext = createContext();
 
 export const NotebookProvider = ({ children }) => {
+  const { user } = useAuth();
   const [notebooks, setNotebooks] = useState([]);
   const [currentNotebook, setCurrentNotebook] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchNotebooks();
-  }, []);
+    if (user) {
+      fetchNotebooks();
+    }
+  }, [user]);
 
   const fetchNotebooks = async () => {
     try {

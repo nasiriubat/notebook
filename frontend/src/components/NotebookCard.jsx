@@ -1,30 +1,40 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useContext, useState, useMemo, useRef, useEffect } from "react";
 import { NotebookContext } from "../context/NotebookContext";
-import { MdMoreVert, MdEdit, MdDelete } from "react-icons/md";
+import { MdMoreVert, MdEdit, MdDelete, MdOpenInNew, MdSource } from "react-icons/md";
 import { Modal } from "react-bootstrap";
+import "../styles/notebook-card.css";
 
-export default function NotebookCard({ notebook }) {
+export default function NotebookCard({ notebook, onDelete, onUpdate, viewMode = "grid" }) {
   const navigate = useNavigate();
-  const { removeNotebook, updateNotebookDetails, getNotebook, loading, currentNotebook } = useContext(NotebookContext);
+  const { getNotebook, loading, currentNotebook } = useContext(NotebookContext);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [newName, setNewName] = useState(notebook.name);
   const [isLoading, setIsLoading] = useState(false);
   const dropdownRef = useRef(null);
+  const [activeMenu, setActiveMenu] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(notebook.name);
+  const menuRef = useRef(null);
+  const buttonRef = useRef(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdown(false);
+    const handleClickOutside = (event) => {
+      if (
+        menuRef.current && 
+        !menuRef.current.contains(event.target) && 
+        !buttonRef.current.contains(event.target)
+      ) {
+        setActiveMenu(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -50,32 +60,69 @@ export default function NotebookCard({ notebook }) {
 
   const handleDelete = async (e) => {
     e.stopPropagation();
-    await removeNotebook(notebook.id);
+    await onDelete(notebook.id);
     setShowDeleteModal(false);
   };
 
   const handleUpdate = async (e) => {
     e.stopPropagation();
     if (newName.trim() && newName !== notebook.name) {
-      await updateNotebookDetails(notebook.id, { name: newName });
+      await onUpdate(notebook.id, { name: newName });
     }
     setShowEditModal(false);
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return new Date().toLocaleDateString();
-    return new Date(dateString).toLocaleDateString();
+    if (!dateString) return 'No date';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      return 'Invalid Date';
+    }
   };
 
-  const handleCardClick = async (e) => {
-    e.preventDefault();
+  const handleCardClick = (e) => {
+    if (e.target.closest('.notebook-menu') || 
+        e.target.closest('.notebook-actions') || 
+        e.target.closest('.edit-form')) {
+      return;
+    }
     setIsLoading(true);
     try {
-      await getNotebook(notebook.id);
       navigate(`/notebook/${notebook.id}`);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const toggleMenu = (e) => {
+    e.stopPropagation();
+    setActiveMenu(!activeMenu);
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+    setActiveMenu(false);
+  };
+
+  const handleSave = async () => {
+    if (!editName.trim()) return;
+    try {
+      await onUpdate(notebook.id, { name: editName });
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating notebook:", error);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditName(notebook.name);
   };
 
   if (isLoading) {
@@ -93,154 +140,93 @@ export default function NotebookCard({ notebook }) {
   }
 
   return (
-    <div className="col-lg-4 col-md-6 col-sm-12 mb-4">
-      <div
-        className="card p-2 h-100"
-        style={{
-          background: gradientStyle,
-          minHeight: "200px",
-          maxHeight: "200px",
-          position: "relative",
-          border: "none",
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)",
-          transition: "transform 0.2s, box-shadow 0.2s",
-          display: "flex",
-          flexDirection: "column"
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "translateY(-2px)";
-          e.currentTarget.style.boxShadow = "0 8px 12px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.1)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "translateY(0)";
-          e.currentTarget.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)";
-        }}
-      >
-        {/* Top section with dropdown menu */}
-        <div className="d-flex justify-content-end">
-          <div className="position-relative" ref={dropdownRef}>
-            <button
-              className="btn btn-sm text-muted"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowDropdown(!showDropdown);
-              }}
-              style={{ padding: "0.25rem 0.5rem" }}
-            >
-              <MdMoreVert className="react-icons" />
-            </button>
-            
-            {showDropdown && (
-              <div 
-                className="dropdown-menu show"
-                style={{
-                  position: 'absolute',
-                  right: 0,
-                  top: '100%',
-                  zIndex: 1000,
-                  minWidth: '160px',
-                  padding: '0.5rem 0',
-                  margin: 0,
-                  backgroundColor: 'white',
-                  border: '1px solid rgba(0,0,0,.1)',
-                  borderRadius: '0.375rem',
-                  boxShadow: '0 0.5rem 1rem rgba(0,0,0,.15)'
+    <div 
+      className={`notebook-card ${viewMode}`}
+      onClick={handleCardClick}
+    >
+      <div className="notebook-header">
+        {isEditing ? (
+          <div className="edit-form">
+            <input
+              type="text"
+              className="form-control"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && handleSave()}
+              autoFocus
+            />
+            <div className="edit-actions">
+              <button
+                className="btn btn-sm btn-primary"
+                onClick={handleSave}
+              >
+                Save
+              </button>
+              <button
+                className="btn btn-sm btn-outline"
+                onClick={handleCancel}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <h3 className="notebook-title">{notebook.name}</h3>
+        )}
+        <div className="notebook-actions">
+          <button
+            ref={buttonRef}
+            className="btn btn-link"
+            onClick={toggleMenu}
+            title="More options"
+          >
+            <MdMoreVert size={20} />
+          </button>
+          {activeMenu && (
+            <div className="notebook-menu" ref={menuRef}>
+              <button
+                className="menu-item"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/notebook/${notebook.id}`);
                 }}
               >
-                <button
-                  className="dropdown-item d-flex align-items-center gap-2"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowDropdown(false);
-                    setShowEditModal(true);
-                  }}
-                >
-                  <MdEdit className="react-icons" />
-                  Edit
-                </button>
-                <div className="dropdown-divider" style={{ margin: '0.5rem 0' }}></div>
-                <button
-                  className="dropdown-item d-flex align-items-center gap-2 text-danger"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowDropdown(false);
-                    setShowDeleteModal(true);
-                  }}
-                >
-                  <MdDelete className="react-icons" />
-                  Delete
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div
-          className="text-decoration-none flex-grow-1"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            cursor: "pointer",
-            transition: "transform 0.2s",
-            padding: "0.5rem",
-            borderRadius: "0.25rem"
-          }}
-          onClick={handleCardClick}
-        >
-          {/* Middle section with title */}
-          <div className="d-flex align-items-center justify-content-center flex-grow-1">
-            <h4 className="mb-0 text-truncate text-center" style={{ maxWidth: "100%" }}>{notebook.name}</h4>
-          </div>
-
-          {/* Bottom section - clickable */}
-          <div className="d-flex justify-content-between align-items-center text-muted small mt-auto" style={{ padding: "0.25rem 0" }}>
-            <span>Created: {formatDate(notebook.createdAt)}</span>
-            <span>Sources: {notebook.sourceCount || 0}</span>
-          </div>
+                <MdOpenInNew size={18} className="me-2" />
+                Open
+              </button>
+              <button
+                className="menu-item"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEdit();
+                }}
+              >
+                <MdEdit size={18} className="me-2" />
+                Edit
+              </button>
+              <button
+                className="menu-item text-danger"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(notebook.id);
+                }}
+              >
+                <MdDelete size={18} className="me-2" />
+                Delete
+              </button>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Edit Modal */}
-      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Edit Notebook</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <input
-            type="text"
-            className="form-control"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder="Enter notebook name"
-          />
-        </Modal.Body>
-        <Modal.Footer>
-          <button className="btn btn-secondary" onClick={() => setShowEditModal(false)}>
-            Cancel
-          </button>
-          <button className="btn btn-primary" onClick={handleUpdate}>
-            Save Changes
-          </button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* Delete Modal */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Delete Notebook</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to delete this notebook? This action cannot be undone.
-        </Modal.Body>
-        <Modal.Footer>
-          <button className="btn btn-secondary" onClick={() => setShowDeleteModal(false)}>
-            Cancel
-          </button>
-          <button className="btn btn-danger" onClick={handleDelete}>
-            Delete
-          </button>
-        </Modal.Footer>
-      </Modal>
+      <div className="notebook-footer">
+        <span className="notebook-date">
+          Created {formatDate(notebook.createdAt)}
+        </span>
+        <span className="notebook-sources">
+          <MdSource size={16} className="me-1" />
+          {notebook.sources?.length || 0} sources
+        </span>
+      </div>
     </div>
   );
 }

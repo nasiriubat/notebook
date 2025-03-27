@@ -25,6 +25,19 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Add response interceptor to handle authentication errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear token and redirect to login
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Authentication Endpoints
 export const registerUser = (data) => api.post("/register", data);
 export const loginUser = (data) => api.post("/login", data);
@@ -58,8 +71,52 @@ export const uploadSource = (data) => {
         'Authorization': `Bearer ${localStorage.getItem("token")}`
       }
     });
+
+    // Add the same response interceptor to handle authentication errors
+    fileApi.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          localStorage.removeItem("token");
+          window.location.href = "/login";
+        }
+        return Promise.reject(error);
+      }
+    );
     
     return fileApi.post("/sources", formData);
+  }
+  
+  // For text input, create FormData
+  if (data.text) {
+    const formData = new FormData();
+    formData.append('text', data.text);
+    formData.append('notebook_id', data.notebook_id);
+    formData.append('type', data.type || 'text');
+    formData.append('is_note', data.is_note ? '1' : '0');
+    
+    // Create a new axios instance for this request with the correct content type
+    const textApi = axios.create({
+      baseURL: API_BASE_URL,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${localStorage.getItem("token")}`
+      }
+    });
+
+    // Add the same response interceptor to handle authentication errors
+    textApi.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          localStorage.removeItem("token");
+          window.location.href = "/login";
+        }
+        return Promise.reject(error);
+      }
+    );
+    
+    return textApi.post("/sources", formData);
   }
   
   // For non-file uploads, use the regular api instance

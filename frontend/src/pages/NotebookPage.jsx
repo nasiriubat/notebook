@@ -48,6 +48,10 @@ export default function NotebookPage() {
     fetchSources();
   }, [fetchSources]);
 
+  const handleSourceAdded = useCallback((newSource) => {
+    setSources(prev => [newSource, ...prev]);
+  }, []);
+
   if (loading) {
     return (
       <div>
@@ -100,6 +104,7 @@ export default function NotebookPage() {
             <ChatComponent 
               notebookId={id} 
               selectedSources={selectedSources}
+              onSourceAdded={handleSourceAdded}
               key={`chat-${id}-${selectedSources.map(s => s.id).join('-')}`}
             />
           </div>

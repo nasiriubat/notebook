@@ -44,7 +44,7 @@ def login():
         return (
             jsonify(
                 {
-                    "euser": user.to_dict(),  # Serialize the user object
+                    "user": user.to_dict(),  # Serialize the user object
                     "token": token,
                     "refresh_token": refresh_token,
                     "expires_in": 2592000,

@@ -1,80 +1,98 @@
-import { useContext, useState } from "react";
-import { AuthContext } from "../context/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import Navbar from "../components/Navbar";
 
 export default function Login() {
-  const { login } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [credentials, setCredentials] = useState({ email: "", password: "" });
-  const [error, setError] = useState(null);
+  const { login } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!credentials.email || !credentials.password) {
-      setError("Please fill in all fields");
-      return;
-    }
+    setError("");
+    setLoading(true);
 
     try {
-      setLoading(true);
-      setError(null);
-      const success = await login(credentials);
-      if (success) {
-        navigate("/");
-      } else {
-        setError("Invalid credentials");
-      }
+      await login(email, password);
+      navigate("/");
     } catch (err) {
-      setError("Login failed. Please try again.");
-      console.error("Login error:", err);
+      setError(err.message || "Failed to login");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container d-flex align-items-center justify-content-center" style={{ height: "100vh" }}>
-      <div className="card p-4 shadow-lg w-50">
-        <h2 className="text-center">Login</h2>
-        {error && <div className="alert alert-danger">{error}</div>}
-        <form onSubmit={handleLogin}>
-          <div className="mb-3">
-            <input
-              type="email"
-              className="form-control"
-              placeholder="Email"
-              value={credentials.email}
-              onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
-              disabled={loading}
-              required
-            />
+    <div className="min-vh-100">
+      <Navbar />
+      <div className="container py-5">
+        <div className="row justify-content-center">
+          <div className="col-md-6 col-lg-4">
+            <div className="card">
+              <div className="card-body p-4">
+                <h2 className="text-center mb-4">Login</h2>
+                {error && (
+                  <div className="alert alert-danger" role="alert">
+                    {error}
+                  </div>
+                )}
+                <form onSubmit={handleSubmit}>
+                  <div className="mb-3">
+                    <label htmlFor="email" className="form-label">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      id="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="password" className="form-label">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      id="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="btn btn-primary w-100"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                    ) : null}
+                    Login
+                  </button>
+                </form>
+                <div className="text-center mt-3">
+                  <p className="mb-0">
+                    Don't have an account?{" "}
+                    <Link to="/register" className="text-decoration-none">
+                      Register
+                    </Link>
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="mb-3">
-            <input
-              type="password"
-              className="form-control"
-              placeholder="Password"
-              value={credentials.password}
-              onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-              disabled={loading}
-              required
-            />
-          </div>
-          <button 
-            className="btn btn-primary w-100" 
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? (
-              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-            ) : null}
-            Login
-          </button>
-        </form>
-        <div className="text-center mt-3">
-          <Link to="/forgot-password" className="text-decoration-none">Forgot Password?</Link> |
-          <Link to="/register" className="text-decoration-none ms-2">Register</Link>
         </div>
       </div>
     </div>

@@ -1,0 +1,245 @@
+.notebook-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem 0;
+}
+
+.notebook-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 0;
+}
+
+.notebook-card {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: visible;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  min-height: 160px;
+}
+
+.notebook-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary);
+}
+
+.notebook-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: auto;
+  position: relative;
+}
+
+.notebook-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.4;
+  flex: 1;
+  padding-right: 1rem;
+}
+
+.edit-form {
+  flex: 1;
+  padding-right: 1rem;
+}
+
+.edit-form input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--text);
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.edit-form input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+  outline: none;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.edit-actions button {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.notebook-actions {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -0.5rem;
+  margin-right: -0.5rem;
+}
+
+.notebook-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  min-width: 160px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.menu-item:hover {
+  background: var(--hover);
+}
+
+.menu-item.text-danger {
+  color: var(--error);
+}
+
+.menu-item.text-danger:hover {
+  background: var(--error);
+  color: white;
+}
+
+.notebook-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.notebook-date {
+  font-size: 0.875rem;
+  color: var(--textSecondary);
+}
+
+.notebook-sources {
+  font-size: 0.875rem;
+  color: var(--textSecondary);
+  display: flex;
+  align-items: center;
+}
+
+.create-notebook-form {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px dashed var(--border);
+  transition: all 0.2s ease;
+}
+
+.create-notebook-form:hover {
+  border-color: var(--primary);
+}
+
+.create-notebook-form .input-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.create-notebook-form input {
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--text);
+}
+
+.create-notebook-form input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px dashed var(--border);
+}
+
+.empty-state h3 {
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  color: var(--textSecondary);
+  margin-bottom: 1.5rem;
+}
+
+/* Loading skeleton animation */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.notebook-skeleton {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--hover) 50%, var(--surface) 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .notebook-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .notebook-list {
+    gap: 0.75rem;
+  }
+  
+  .notebook-card {
+    padding: 1rem;
+    min-height: 140px;
+  }
+  
+  .notebook-menu {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 12px 12px 0 0;
+    margin: 0;
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+} 

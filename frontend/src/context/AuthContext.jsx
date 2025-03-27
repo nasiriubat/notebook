@@ -1,126 +1,82 @@
-import { createContext, useState, useEffect } from "react";
-import { loginUser, registerUser, refreshToken } from "../api/api";
-import axios from "axios";
+import { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
 
-export const AuthContext = createContext();
+const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState();
-  const [isLoading, setIsLoading] = useState(true);
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    // Check if there's a token in localStorage
+    const token = localStorage.getItem('token');
+    if (token) {
+      // If there's a token, set the user state based on the token
       try {
-        const token = localStorage.getItem("token");
-        const storedUser = JSON.parse(localStorage.getItem("user"));
-        if (token && storedUser) {
-          setUser(storedUser);
-          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-          startSilentRefresh();
-        } else {
-          setUser(null);
-        }
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setUser({ id: payload.sub, email: payload.email });
       } catch (error) {
-        console.error("Auth check error:", error);
-        setUser(null);
-      } finally {
-        setIsLoading(false);
+        console.error('Error parsing token:', error);
+        localStorage.removeItem('token');
       }
-    };
-
-    checkAuth();
+    }
+    setLoading(false);
   }, []);
 
-  // Start silent refresh in background
-  const startSilentRefresh = () => {
-    const refreshInterval = setInterval(async () => {
-      try {
-        const tokenExp = localStorage.getItem("token_expiry");
-        if (tokenExp && new Date().getTime() >= tokenExp - 60000) {
-          await refreshUserToken();
-        }
-      } catch (error) {
-        console.error("Silent token refresh failed:", error);
-        logout();
-        clearInterval(refreshInterval);
-      }
-    }, 30000); // Check every 30 seconds
-  };
-
-  // Login and store token
-  const login = async (credentials) => {
+  const login = async (email, password) => {
     try {
-      const response = await loginUser(credentials);
-      if (response.status == 200) {
-        let { token, refresh_token, euser, expires_in } = response.data;
-        storeToken(token, refresh_token, expires_in);
-        localStorage.setItem("user", JSON.stringify(euser));
-        setUser(euser);
-        startSilentRefresh();
-        return true;
-      }
-      return false;
+      const response = await axios.post('http://127.0.0.1:5000/login', {
+        email,
+        password
+      });
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      setUser(user);
+      return user;
     } catch (error) {
-      console.error("Login error:", error);
+      throw error.response?.data || error;
     }
   };
 
-  const register = async (credentials) => {
+  const register = async (email, password) => {
     try {
-      const response = await registerUser(credentials);
-      console.log(response);
-      if (response.status == 201){
-        const { token, refresh_token, user, expires_in } = response.data;
-        storeToken(token, refresh_token, expires_in);
-        localStorage.setItem("user", JSON.stringify(user));
-        setUser(user);
-        startSilentRefresh();
-        return true;
-      }
-      return false;
+      const response = await axios.post('http://127.0.0.1:5000/register', {
+        email,
+        password
+      });
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      setUser(user);
+      return user;
     } catch (error) {
-      console.error("Register error:", error);
+      throw error.response?.data || error;
     }
   };
 
-  // Refresh access token
-  const refreshUserToken = async () => {
-    try {
-      const storedRefreshToken = localStorage.getItem("refresh_token");
-      if (!storedRefreshToken) return logout();
-
-      const response = await refreshToken({ refresh_token: storedRefreshToken });
-      const { token, expires_in } = response.data;
-      storeToken(token, storedRefreshToken, expires_in);
-    } catch (error) {
-      console.error("Token refresh failed:", error);
-      logout();
-    }
-  };
-
-  // Store tokens securely
-  const storeToken = (token, refresh_token, expires_in) => {
-    const tokenExpiryTime = new Date().getTime() + expires_in * 1000;
-
-    localStorage.setItem("token", token);
-    localStorage.setItem("refresh_token", refresh_token);
-    localStorage.setItem("token_expiry", tokenExpiryTime);
-    axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-  };
-
-  // Logout user and clear tokens
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("token_expiry");
-    localStorage.removeItem("user");
-    delete axios.defaults.headers.common["Authorization"];
+    localStorage.removeItem('token');
     setUser(null);
   };
 
+  const value = {
+    user,
+    loading,
+    login,
+    register,
+    logout
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, register, isLoading }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}

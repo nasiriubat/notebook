@@ -1,90 +1,116 @@
-import { useContext, useState } from "react";
-import { AuthContext } from "../context/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import Navbar from "../components/Navbar";
 
 export default function Register() {
-  const { register } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [credentials, setCredentials] = useState({ name: "", email: "", password: "" });
-  const [error, setError] = useState(null);
+  const { register } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleRegister = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!credentials.name || !credentials.email || !credentials.password) {
-      setError("Please fill in all fields");
-      return;
+    setError("");
+
+    if (password !== confirmPassword) {
+      return setError("Passwords do not match");
     }
 
     try {
       setLoading(true);
-      setError(null);
-      const success = await register(credentials);
-      if (success) {
-        navigate("/");
-      } else {
-        setError("Registration failed. Please try again.");
-      }
+      await register(email, password);
+      navigate("/");
     } catch (err) {
-      setError("Registration failed. Please try again.");
-      console.error("Registration error:", err);
+      setError(err.message || "Failed to create an account");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container d-flex align-items-center justify-content-center" style={{ height: "100vh" }}>
-      <div className="card p-4 shadow-lg w-50">
-        <h2 className="text-center">Register</h2>
-        {error && <div className="alert alert-danger">{error}</div>}
-        <form onSubmit={handleRegister}>
-          <div className="mb-3">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Name"
-              value={credentials.name}
-              onChange={(e) => setCredentials({ ...credentials, name: e.target.value })}
-              disabled={loading}
-              required
-            />
+    <div className="min-vh-100">
+      <Navbar />
+      <div className="container py-5">
+        <div className="row justify-content-center">
+          <div className="col-md-6 col-lg-4">
+            <div className="card">
+              <div className="card-body p-4">
+                <h2 className="text-center mb-4">Register</h2>
+                {error && (
+                  <div className="alert alert-danger" role="alert">
+                    {error}
+                  </div>
+                )}
+                <form onSubmit={handleSubmit}>
+                  <div className="mb-3">
+                    <label htmlFor="email" className="form-label">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      id="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="password" className="form-label">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      id="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="confirm-password" className="form-label">
+                      Confirm Password
+                    </label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      id="confirm-password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="btn btn-primary w-100"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                    ) : null}
+                    Register
+                  </button>
+                </form>
+                <div className="text-center mt-3">
+                  <p className="mb-0">
+                    Already have an account?{" "}
+                    <Link to="/login" className="text-decoration-none">
+                      Login
+                    </Link>
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="mb-3">
-            <input
-              type="email"
-              className="form-control"
-              placeholder="Email"
-              value={credentials.email}
-              onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
-              disabled={loading}
-              required
-            />
-          </div>
-          <div className="mb-3">
-            <input
-              type="password"
-              className="form-control"
-              placeholder="Password"
-              value={credentials.password}
-              onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-              disabled={loading}
-              required
-            />
-          </div>
-          <button 
-            className="btn btn-success w-100" 
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? (
-              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-            ) : null}
-            Register
-          </button>
-        </form>
-        <div className="text-center mt-3">
-          Already have an account? <Link to="/login" className="text-decoration-none">Login</Link>
         </div>
       </div>
     </div>
