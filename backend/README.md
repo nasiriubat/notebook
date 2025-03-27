@@ -1,6 +1,5 @@
 python -m venv venv
 venv\Scripts\activate
-pip install -r requirements.txt
 python -c "import secrets; print(secrets.token_hex(32))"
 sudo apt install tesseract-ocr  # For Linux
 

@@ -13,9 +13,6 @@ class Source(db.Model):
     is_note = db.Column(db.Boolean, default=False)  # Flag to identify if this is a note
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Define a relationship to the Notebook model
-    notebook = db.relationship('Notebook', backref='sources')
 
     def to_dict(self):
         return {

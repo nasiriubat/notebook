@@ -8,6 +8,9 @@ class Notebook(db.Model):
     name = db.Column(db.String(100), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Define relationship with sources with cascade delete
+    sources = db.relationship('Source', backref='notebook', cascade='all, delete-orphan')
 
     def to_dict(self):
         return {
