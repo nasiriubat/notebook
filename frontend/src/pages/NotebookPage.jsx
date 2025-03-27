@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useCallback } from "react";
 import Navbar from "../components/Navbar";
 import SourceComponent from "../components/SourceComponent";
 import ChatComponent from "../components/ChatComponent";
@@ -20,29 +20,33 @@ export default function NotebookPage() {
     }
   }, [id, currentNotebook, getNotebook]);
 
-  const fetchSources = async () => {
+  const fetchSources = useCallback(async () => {
     try {
       const response = await getSources(id);
       setSources(response.data.reverse());
     } catch (err) {
       console.error("Error fetching sources:", err);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     if (id) {
       fetchSources();
     }
-  }, [id]);
+  }, [id, fetchSources]);
 
-  const handleSourceSelect = (selectedSourceIds) => {
+  const handleSourceSelect = useCallback((selectedSourceIds) => {
     if (!Array.isArray(selectedSourceIds)) {
       console.error('selectedSourceIds is not an array');
       return;
     }
     const selected = sources.filter(source => selectedSourceIds.includes(source.id));
     setSelectedSources(selected);
-  };
+  }, [sources]);
+
+  const handleSourceUpdate = useCallback(() => {
+    fetchSources();
+  }, [fetchSources]);
 
   if (loading) {
     return (
@@ -88,7 +92,7 @@ export default function NotebookPage() {
             <SourceComponent 
               notebookId={id} 
               sources={sources} 
-              onSourcesUpdate={fetchSources}
+              onSourcesUpdate={handleSourceUpdate}
               onSourceSelect={handleSourceSelect}
             />
           </div>
@@ -96,13 +100,11 @@ export default function NotebookPage() {
             <ChatComponent 
               notebookId={id} 
               selectedSources={selectedSources}
-              onSourceAdded={(newSource) => {
-                setSources(prev => [newSource, ...prev]);
-              }}
+              key={`chat-${id}-${selectedSources.map(s => s.id).join('-')}`}
             />
           </div>
           <div className="col-lg-3">
-            <NoteComponent notebookId={id} onNoteAdded={fetchSources} />
+            <NoteComponent notebookId={id} onNoteAdded={handleSourceUpdate} />
           </div>
         </div>
       </div>
