@@ -32,7 +32,7 @@ from app.models.chat import Chat
 from app.controllers.auth_controller import register, login, change_password, forgot_password, reset_password, logout, generate_new_token
 from app.controllers.notebook_controller import create_notebook, get_notebooks, update_notebook, delete_notebook, get_notebook
 from app.controllers.source_controller import add_source, get_sources, update_source, delete_source, get_source
-from app.controllers.chat_controller import send_chat_message
+from app.controllers.chat_controller import send_chat_message, get_chat_messages, delete_chat_message
 
 # Auth routes
 app.add_url_rule('/register', 'register', register, methods=['POST'])
@@ -59,5 +59,5 @@ app.add_url_rule('/sources/<int:source_id>', 'delete_source', delete_source, met
 
 # Chat routes
 app.add_url_rule('/chat', 'send_chat_message', send_chat_message, methods=['POST'])
-# app.add_url_rule('/chat/<int:notebook_id>', 'get_chat_messages', get_chat_messages, methods=['GET'])
-# app.add_url_rule('/chat/<int:notebook_id>', 'delete_chat_message', delete_chat_message, methods=['DELETE'])
+app.add_url_rule('/chat/<int:notebook_id>', 'get_chat_messages', get_chat_messages, methods=['GET'])
+app.add_url_rule('/chat/<int:notebook_id>', 'delete_chat_message', delete_chat_message, methods=['DELETE'])

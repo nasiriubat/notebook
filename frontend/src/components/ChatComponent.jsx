@@ -36,17 +36,43 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
         ? selectedSources.map(source => source.description).join('\n')
         : '';
 
+      // Get source IDs from selected sources
+      const sourceIds = selectedSources.map(source => source.id);
+
+      // Log the request data for debugging
+      console.log('Sending chat message with data:', {
+        context,
+        query: query.trim(),
+        notebook_id: notebookId,
+        source_ids: sourceIds
+      });
+
       // Send message to backend with proper format
       const response = await sendChatMessage({
         context,
-        query: query.trim()
+        query: query.trim(),
+        notebook_id: notebookId,
+        source_ids: sourceIds
       });
       
-      // Add bot response
-      setMessages(prev => [...prev, { role: "assistant", content: response.data.reply }]);
+      // Add bot response with sources
+      setMessages(prev => [...prev, { 
+        role: "assistant", 
+        content: response.data.reply,
+        sources: response.data.sources
+      }]);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to send message");
       console.error("Error sending message:", err);
+      // More detailed error message
+      const errorMessage = err.response?.data?.error || 
+                          err.response?.data?.message || 
+                          "Failed to send message";
+      setError(errorMessage);
+      
+      // If unauthorized, remove the user message we added
+      if (err.response?.status === 403) {
+        setMessages(prev => prev.slice(0, -1));
+      }
     } finally {
       setSending(false);
     }
@@ -103,15 +129,24 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
         ? selectedSources.map(source => source.description).join('\n')
         : '';
 
+      // Get source IDs from selected sources
+      const sourceIds = selectedSources.map(source => source.id);
+
       // Send message to backend with proper format
       const response = await sendChatMessage({
         context,
         query: userMessage.content.trim(),
-        regenerate: true  // Add flag to indicate this is a regeneration
+        notebook_id: notebookId,
+        source_ids: sourceIds,
+        regenerate: true
       });
       
-      // Add new bot response after the existing messages
-      setMessages(prev => [...prev, { role: "assistant", content: response.data.reply }]);
+      // Add new bot response after the existing messages with sources
+      setMessages(prev => [...prev, { 
+        role: "assistant", 
+        content: response.data.reply,
+        sources: response.data.sources
+      }]);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to regenerate response");
       console.error("Error regenerating response:", err);
@@ -165,6 +200,18 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
                   <div className={`message ${message.role === "user" ? "user-message" : "bot-message"}`}>
                     <div className="message-content">
                       {message.content}
+                      {message.role === "assistant" && message.sources && message.sources.length > 0 && (
+                        <div className="message-sources mt-2">
+                          <small className="text-muted">Sources:</small>
+                          <div className="source-tags">
+                            {message.sources.map((source, idx) => (
+                              <span key={idx} className="badge bg-secondary me-1">
+                                {source}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       {message.role === "assistant" && (
                         <div className="message-actions">
                           <Button
