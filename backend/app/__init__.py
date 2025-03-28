@@ -26,6 +26,7 @@ migrate=Migrate(app, db)
 from app.models.user import User
 from app.models.notebook import Notebook
 from app.models.source import Source
+from app.models.chat import Chat
 
 # Import and register controllers
 from app.controllers.auth_controller import register, login, change_password, forgot_password, reset_password, logout, generate_new_token
@@ -58,3 +59,5 @@ app.add_url_rule('/sources/<int:source_id>', 'delete_source', delete_source, met
 
 # Chat routes
 app.add_url_rule('/chat', 'send_chat_message', send_chat_message, methods=['POST'])
+# app.add_url_rule('/chat/<int:notebook_id>', 'get_chat_messages', get_chat_messages, methods=['GET'])
+# app.add_url_rule('/chat/<int:notebook_id>', 'delete_chat_message', delete_chat_message, methods=['DELETE'])

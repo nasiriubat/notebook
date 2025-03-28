@@ -75,7 +75,11 @@
   overflow-y: auto;
   padding-right: 0.5rem; /* Space for scrollbar */
   margin-bottom: 1rem;
+  /* hide scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+
 
 /* Custom scrollbar styling */
 .chat-messages::-webkit-scrollbar {

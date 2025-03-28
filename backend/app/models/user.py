@@ -9,9 +9,16 @@ class User(db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     reset_token = db.Column(db.String(200), nullable=True)
+    platform = db.Column(db.String(100), nullable=True)
+    oauth_id = db.Column(db.String(100), nullable=True)
+    lol_id = db.Column(db.String(100), nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # Define relationship with notebooks with cascade delete
+    notebooks = db.relationship('Notebook', backref='user', cascade='all, delete-orphan')
+    
+    
     def set_password(self, password):
         self.password = generate_password_hash(password)
 
