@@ -273,12 +273,7 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
       >
         <div className="chat-messages">
           <div className="d-flex flex-column">
-            {!selectedSources?.length ? (
-              <div className="text-center text-muted py-5">
-                <i className="bi bi-chat-dots display-4 mb-3"></i>
-                <p className="mb-0">Select sources to start the conversation</p>
-              </div>
-            ) : messages.length === 0 ? (
+            {messages.length === 0 ? (
               <div className="text-center text-muted py-5">
                 <i className="bi bi-chat-dots display-4 mb-3"></i>
                 <p className="mb-0">Start a conversation with your sources</p>
