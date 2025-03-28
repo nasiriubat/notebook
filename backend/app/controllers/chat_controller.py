@@ -40,11 +40,21 @@ def send_chat_message():
                 Source.notebook_id == notebook_id
             ).all()
             
-            if len(sources) != len(source_ids):
-                return jsonify(error="One or more sources not found or do not belong to the notebook"), 404
-                
-            # Extract only the titles
-            source_titles = [source.title for source in sources]
+            # If some sources were deleted, we'll still proceed with the available ones
+            if sources:
+                source_titles = [source.title for source in sources]
+            else:
+                # If all sources were deleted, we'll use an empty context
+                context = ""
+        
+        # Save user message first
+        user_message = Chat(
+            notebook_id=notebook_id,
+            message=query,
+            role="user",
+            sources=[]  # User messages don't have sources
+        )
+        db.session.add(user_message)
         
         # Prepare the messages for OpenAI
         messages = [
@@ -63,27 +73,58 @@ def send_chat_message():
         # Extract the assistant's response
         reply = response.choices[0].message.content
         
-        # Create chat message with source titles
-        chat_message = Chat(
+        # Save assistant message
+        assistant_message = Chat(
             notebook_id=notebook_id,
             message=reply,
+            role="assistant",
             sources=source_titles  # Store only the titles
         )
-        db.session.add(chat_message)
+        db.session.add(assistant_message)
         db.session.commit()
         
         return jsonify({
             "reply": reply,
-            "message_id": chat_message.id,
-            "sources": source_titles  # Return only the titles
+            "message_id": assistant_message.id,
+            "sources": source_titles,  # Return only the titles
+            "warning": "Some selected sources were deleted" if source_ids and not sources else None
         }), 200
         
     except Exception as e:
         db.session.rollback()
-        return jsonify(error=str(e)), 500 
+        return jsonify(error=str(e)), 500
 
 @jwt_required()
 def get_chat_messages(notebook_id):
+    try:
+        # Get current user ID from JWT token
+        current_user_id = get_jwt_identity()
+        
+        # Verify notebook exists and belongs to user
+        notebook = Notebook.query.filter_by(id=notebook_id, user_id=current_user_id).first()
+        if not notebook:
+            return jsonify(error="Notebook not found or unauthorized access"), 403
+            
+        # Get all chat messages for the notebook
+        chat_messages = Chat.query.filter_by(notebook_id=notebook_id).order_by(Chat.created_at.asc()).all()
+        
+        # Convert messages to dictionary format
+        messages = []
+        for msg in chat_messages:
+            message_dict = {
+                "role": msg.role,
+                "content": msg.message,
+                "sources": msg.sources if msg.role == "assistant" and msg.sources else []
+            }
+            messages.append(message_dict)
+        
+        return jsonify(messages=messages), 200
+        
+    except Exception as e:
+        return jsonify(error=str(e)), 500
+
+@jwt_required()
+def delete_chat_message(notebook_id):
     try:
         # Verify notebook exists and belongs to user
         notebook = Notebook.query.get_or_404(notebook_id)
@@ -92,38 +133,11 @@ def get_chat_messages(notebook_id):
         if notebook.user_id != int(current_user_id):
             return jsonify(error="Unauthorized access to notebook"), 403
             
-        # Get all chat messages for the notebook
-        chat_messages = Chat.query.filter_by(notebook_id=notebook_id).order_by(Chat.created_at.asc()).all()
-        
-        return jsonify(messages=[message.to_dict() for message in chat_messages]), 200
-        
-    except Exception as e:
-        return jsonify(error=str(e)), 500
-
-@jwt_required()
-def delete_chat_message(notebook_id):
-    try:
-        data = request.get_json()
-        message_id = data.get("message_id")
-        
-        if not message_id:
-            return jsonify(error="Message ID is required"), 400
-            
-        # Verify notebook exists and belongs to user
-        notebook = Notebook.query.get_or_404(notebook_id)
-        current_user_id = get_jwt_identity()
-        
-        if notebook.user_id != current_user_id:
-            return jsonify(error="Unauthorized access to notebook"), 403
-            
-        # Get and verify chat message exists and belongs to notebook
-        chat_message = Chat.query.filter_by(id=message_id, notebook_id=notebook_id).first_or_404()
-        
-        # Delete the message
-        db.session.delete(chat_message)
+        # Delete all chat messages for the notebook
+        Chat.query.filter_by(notebook_id=notebook_id).delete()
         db.session.commit()
         
-        return jsonify(message="Chat message deleted successfully"), 200
+        return jsonify(message="Chat messages deleted successfully"), 200
         
     except Exception as e:
         db.session.rollback()

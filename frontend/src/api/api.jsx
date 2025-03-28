@@ -135,4 +135,5 @@ export const updateNote = (id, data) => api.put(`/note/${id}`, data);
 
 // Chat endpoints
 export const sendChatMessage = (data) => api.post("/chat", data);
-export const getChatMessages = () => api.get("/chat");
+export const getChatMessages = (notebookId) => api.get(`/chat/${notebookId}`);
+export const deleteChatMessages = (notebookId) => api.delete(`/chat/${notebookId}`);

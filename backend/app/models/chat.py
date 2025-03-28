@@ -6,6 +6,7 @@ class Chat(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     notebook_id = db.Column(db.Integer, db.ForeignKey('notebook.id'), nullable=False)
     message = db.Column(db.Text, nullable=True)
+    role = db.Column(db.String(10), nullable=False, default='assistant')  # 'user' or 'assistant'
     sources = db.Column(db.JSON, nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -14,7 +15,8 @@ class Chat(db.Model):
         return {
             "id": self.id,
             "notebook_id": self.notebook_id,
-            "description": self.description,
+            "message": self.message,
+            "role": self.role,
             "sources": self.sources,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None

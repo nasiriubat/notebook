@@ -1,16 +1,40 @@
 import React, { useState, useEffect, useRef } from "react";
-import { sendChatMessage, uploadSource } from "../api/api";
-import { FaPaperPlane, FaCopy, FaPlus, FaRedo } from "react-icons/fa";
-import { Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
+import { sendChatMessage, uploadSource, deleteChatMessages, getChatMessages } from "../api/api";
+import { FaPaperPlane, FaCopy, FaPlus, FaRedo, FaTrash } from "react-icons/fa";
+import { Card, Form, Button, Alert, Spinner, Modal } from 'react-bootstrap';
 import './ChatComponent.css';
 
 const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
   const [messages, setMessages] = useState([]);
   const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sending, setSending] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const messagesEndRef = useRef(null);
+
+  // Load messages when component mounts or notebook changes
+  useEffect(() => {
+    const loadMessages = async () => {
+      if (!notebookId) return;
+      
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const response = await getChatMessages(notebookId);
+        setMessages(response.data.messages);
+      } catch (err) {
+        console.error("Error loading chat messages:", err);
+        setError(err.response?.data?.message || "Failed to load chat messages");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMessages();
+  }, [notebookId]);
 
   useEffect(() => {
     scrollToBottom();
@@ -59,7 +83,8 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
       setMessages(prev => [...prev, { 
         role: "assistant", 
         content: response.data.reply,
-        sources: response.data.sources
+        sources: response.data.sources,
+        warning: response.data.warning
       }]);
     } catch (err) {
       console.error("Error sending message:", err);
@@ -145,13 +170,30 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
       setMessages(prev => [...prev, { 
         role: "assistant", 
         content: response.data.reply,
-        sources: response.data.sources
+        sources: response.data.sources,
+        warning: response.data.warning
       }]);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to regenerate response");
       console.error("Error regenerating response:", err);
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleDeleteChat = async () => {
+    setDeleting(true);
+    setError(null);
+    
+    try {
+      await deleteChatMessages(notebookId);
+      setMessages([]); // Clear messages locally
+      setShowDeleteModal(false);
+    } catch (err) {
+      console.error("Error deleting chat:", err);
+      setError(err.response?.data?.message || "Failed to delete chat");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -170,7 +212,57 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
 
   return (
     <Card className="p-3 h-100 d-flex flex-column">
-      <h5 className="mb-3">Chat</h5>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h5 className="mb-0">Chat</h5>
+        {messages.length > 0 && (
+          <Button
+            variant="outline-danger"
+            size="sm"
+            onClick={() => setShowDeleteModal(true)}
+            className="d-flex align-items-center"
+          >
+            <FaTrash className="me-1" />
+            Clear Chat
+          </Button>
+        )}
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Clear Chat History</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to clear all chat messages? This action cannot be undone.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Cancel
+          </Button>
+          <Button 
+            variant="danger" 
+            onClick={handleDeleteChat}
+            disabled={deleting}
+          >
+            {deleting ? (
+              <>
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                  className="me-2"
+                />
+                Deleting...
+              </>
+            ) : (
+              'Delete'
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
       {error && (
         <Alert variant="danger" role="alert">
           {error}
@@ -210,6 +302,14 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
                               </span>
                             ))}
                           </div>
+                        </div>
+                      )}
+                      {message.role === "assistant" && message.warning && (
+                        <div className="message-warning mt-2">
+                          <small className="text-warning">
+                            <i className="bi bi-exclamation-triangle me-1"></i>
+                            {message.warning}
+                          </small>
                         </div>
                       )}
                       {message.role === "assistant" && (
