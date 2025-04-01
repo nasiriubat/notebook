@@ -18,10 +18,10 @@ echo "📁 Creating application directory..."
 sudo mkdir -p /var/www/thinksync
 sudo chown -R $USER:$USER /var/www/thinksync
 
-# Clone repository (replace with your repository URL)
-echo "📥 Cloning repository..."
-cd /var/www/thinksync
-git clone https://github.com/nasiriubat/notebook.git .
+# # Clone repository (replace with your repository URL)
+# echo "📥 Cloning repository..."
+# cd /var/www/thinksync
+# git clone https://github.com/nasiriubat/notebook.git .
 
 # Setup backend
 echo "⚙️ Setting up backend..."
