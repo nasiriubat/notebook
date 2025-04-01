@@ -21,3 +21,7 @@ flask db upgrade
 #rollback
 flask db downgrade
 
+#move files from local to server
+first in local go to file to be uploaded then run
+ scp -i ../../nasirPC.pem -r ./instance ubuntu@128.214.253.62:/home/ubuntu/thinksync/
+
