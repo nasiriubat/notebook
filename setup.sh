@@ -18,7 +18,7 @@ flask db upgrade
 
 
 # Start Flask app with PM2
-pm2 start venv/bin/python --name flask-backend -- run.py
+pm2 start "python run.py" --name flask-backend
 
 # Setup Frontend
 cd ../frontend
