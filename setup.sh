@@ -3,11 +3,11 @@ set -e
 echo "🚀 Starting fullstack app setup..."
 
 # Update and install required packages
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y python3 python3-venv python3-pip nginx nodejs npm git
+# sudo apt update && sudo apt upgrade -y
+# sudo apt install -y python3 python3-venv python3-pip nginx nodejs npm git
 
 # Install pm2 globally
-sudo npm install -g pm2
+# sudo npm install -g pm2
 
 # Setup Backend
 cd backend
