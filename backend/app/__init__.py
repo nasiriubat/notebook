@@ -19,7 +19,7 @@ app.config.from_object(Config)
 # })
 
 # Enable CORS for all routes and origins (for development purposes only)
-CORS(app, supports_credentials=True)
+CORS(app);
 
 
 db = SQLAlchemy(app)
