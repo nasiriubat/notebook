@@ -14,7 +14,7 @@ cd backend
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-flask db upgrade
+# flask db upgrade # this will not work rather upload the instance folder directly from local to server
 
 
 # Start Flask app with PM2
