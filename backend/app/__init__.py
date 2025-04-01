@@ -10,13 +10,17 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # Configure CORS with specific settings
-CORS(app, resources={
-    r"/*": {
-        "origins": ["http://localhost:5173"],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
-    }
-})
+# CORS(app, resources={
+#     r"/*": {
+#         "origins": ["http://localhost:5173"],
+#         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+#         "allow_headers": ["Content-Type", "Authorization"]
+#     }
+# })
+
+# Enable CORS for all routes and origins (for development purposes only)
+CORS(app, supports_credentials=True)
+
 
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
