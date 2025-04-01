@@ -99,6 +99,4 @@ sudo systemctl status nginx
 4. Keep SSL certificates up to date
 5. Regular security audits
 
----
 
-*Last updated: [Current Date]*

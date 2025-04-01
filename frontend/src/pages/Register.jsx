@@ -6,6 +6,7 @@ import Navbar from "../components/Navbar";
 export default function Register() {
   const navigate = useNavigate();
   const { register } = useAuth();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -22,7 +23,7 @@ export default function Register() {
 
     try {
       setLoading(true);
-      await register(email, password);
+      await register(name,email, password);
       navigate("/");
     } catch (err) {
       setError(err.message || "Failed to create an account");
@@ -46,6 +47,20 @@ export default function Register() {
                   </div>
                 )}
                 <form onSubmit={handleSubmit}>
+                  {/* name */}
+                  <div className="mb-3">
+                    <label htmlFor="name" className="form-label">
+                      Name
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                    />
+                  </div>
                   <div className="mb-3">
                     <label htmlFor="email" className="form-label">
                       Email
