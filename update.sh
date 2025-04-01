@@ -25,8 +25,5 @@ cd ../frontend
 npm install
 npm run build
 
-# Restart Nginx
-echo "🔄 Restarting Nginx..."
-sudo systemctl restart nginx
 
 echo "✅ Update completed successfully!" 

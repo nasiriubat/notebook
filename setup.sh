@@ -60,36 +60,7 @@ cd ../frontend
 npm install
 npm run build
 
-# Create Nginx configuration
-echo "⚙️ Configuring Nginx..."
-sudo tee /etc/nginx/sites-available/your-app << EOF
-server {
-    listen 80;
-    server_name your-domain.com;
 
-    # Frontend
-    location / {
-        root /var/www/thinksync/frontend/dist;
-        try_files \$uri \$uri/ /index.html;
-    }
-
-    # Backend API
-    location /api {
-        proxy_pass http://localhost:5000;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-}
-EOF
-
-# Enable Nginx site
-echo "⚙️ Enabling Nginx site..."
-sudo ln -sf /etc/nginx/sites-available/your-app /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default
-sudo nginx -t
-sudo systemctl restart nginx
 
 echo "✅ Setup completed successfully!"
 echo "📝 Please make sure to:"
