@@ -18,7 +18,9 @@ pip install -r requirements.txt
 
 
 # Start Flask app with PM2
-pm2 start "python run.py" --name flask-backend
+# pm2 start "python run.py" --name flask-backend
+pm2 start venv/bin/python --name flask-backend -- run.py
+
 
 # Setup Frontend
 cd ../frontend
