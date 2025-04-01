@@ -1,29 +1,20 @@
 #!/bin/bash
-
-# Exit on error
 set -e
+echo "🔄 Updating application..."
 
-echo "🔄 Starting application update..."
+# Pull latest code
+git pull origin main
 
-# Navigate to application directory
-# cd /var/www/thinksync
-
-# Pull latest changes
-echo "📥 Pulling latest changes from git..."
-git pull origin main  # or your main branch name
-
-# Update backend
-echo "⚙️ Updating backend..."
+# Backend update
 cd backend
 source venv/bin/activate
 pip install -r requirements.txt
-sudo systemctl restart your-app
+pm2 restart flask-backend
 
-# Update frontend
-echo "⚙️ Updating frontend..."
+# Frontend update
 cd ../frontend
 npm install
 npm run build
+pm2 restart vite-frontend
 
-
-echo "✅ Update completed successfully!" 
+echo "✅ App updated and restarted!"
