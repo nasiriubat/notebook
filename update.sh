@@ -6,7 +6,7 @@ set -e
 echo "🔄 Starting application update..."
 
 # Navigate to application directory
-cd /var/www/thinksync
+# cd /var/www/thinksync
 
 # Pull latest changes
 echo "📥 Pulling latest changes from git..."

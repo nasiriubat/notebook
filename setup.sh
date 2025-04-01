@@ -14,11 +14,11 @@ echo "📦 Installing required system packages..."
 sudo apt install -y python3 python3-pip python3-venv nginx git nodejs npm
 
 # Create application directory
-echo "📁 Creating application directory..."
-sudo mkdir -p /var/www/thinksync
-sudo chown -R $USER:$USER /var/www/thinksync
+# echo "📁 Creating application directory..."
+# sudo mkdir -p /var/www/thinksync
+# sudo chown -R $USER:$USER /var/www/thinksync
 
-# # Clone repository (replace with your repository URL)
+# Clone repository (replace with your repository URL)
 # echo "📥 Cloning repository..."
 # cd /var/www/thinksync
 # git clone https://github.com/nasiriubat/notebook.git .
@@ -39,9 +39,9 @@ After=network.target
 
 [Service]
 User=$USER
-WorkingDirectory=/var/www/thinksync/backend
-Environment="PATH=/var/www/thinksync/backend/venv/bin"
-ExecStart=/var/www/thinksync/backend/venv/bin/python run.py
+WorkingDirectory=/backend
+Environment="PATH=/backend/venv/bin"
+ExecStart=/backend/venv/bin/python run.py
 Restart=always
 
 [Install]
