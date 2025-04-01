@@ -35,13 +35,32 @@ export function AuthProvider({ children }) {
       setUser(user);
       return user;
     } catch (error) {
-      throw error.response?.data || error;
+      if (error.response?.status === 401) {
+        throw new Error('Invalid email or password');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response.data.error || 'Invalid input');
+      } else if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      } else {
+        throw new Error('Network error. Please check your connection.');
+      }
     }
   };
 
-  const register = async (email, password) => {
+  const register = async (name, email, password) => {
     try {
-      const response = await registerUser({ email, password });
+      // Frontend validation
+      if (!name || !email || !password) {
+        throw new Error('All fields are required');
+      }
+      if (!email.includes('@') || !email.includes('.')) {
+        throw new Error('Invalid email format');
+      }
+      if (password.length < 6) {
+        throw new Error('Password must be at least 6 characters long');
+      }
+
+      const response = await registerUser({ name, email, password });
       if (response.status !== 201) {
         throw new Error('Registration failed');
       }
@@ -50,7 +69,15 @@ export function AuthProvider({ children }) {
       setUser(user);
       return user;
     } catch (error) {
-      throw error.response?.data || error;
+      if (error.response?.status === 400) {
+        throw new Error(error.response.data.error || 'Registration failed');
+      } else if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      } else if (error.message) {
+        throw error;
+      } else {
+        throw new Error('Network error. Please check your connection.');
+      }
     }
   };
 

@@ -14,45 +14,75 @@ load_dotenv()
 
 def register():
     data = request.get_json()
-    user = AuthService.register(
-        data.get("name"), data.get("email"), data.get("password")
-    )
-    if user:
-        token = AuthService.login(data.get("email"), data.get("password"))
-        refresh_token = AuthService.generate_refresh_token(user.id)
-        return (
-            jsonify(
-                {
-                    "user": user.to_dict(),  # Serialize the user object
-                    "token": token,
-                    "refresh_token": refresh_token,
-                    "expires_in": 2592000,
-                }
-            ),
-            201,
+    
+    # Validate required fields
+    if not data.get("name"):
+        return jsonify(error="Name is required"), 400
+    if not data.get("email"):
+        return jsonify(error="Email is required"), 400
+    if not data.get("password"):
+        return jsonify(error="Password is required"), 400
+    
+    # Validate email format
+    if not "@" in data.get("email") or not "." in data.get("email"):
+        return jsonify(error="Invalid email format"), 400
+    
+    # Validate password length
+    if len(data.get("password")) < 6:
+        return jsonify(error="Password must be at least 6 characters long"), 400
+
+    try:
+        user = AuthService.register(
+            data.get("name"), data.get("email"), data.get("password")
         )
-    return jsonify(error="User already exists"), 400
+        if user:
+            token = AuthService.login(data.get("email"), data.get("password"))
+            refresh_token = AuthService.generate_refresh_token(user.id)
+            return (
+                jsonify(
+                    {
+                        "user": user.to_dict(),
+                        "token": token,
+                        "refresh_token": refresh_token,
+                        "expires_in": 2592000,
+                    }
+                ),
+                201,
+            )
+        return jsonify(error="Email already registered"), 400
+    except Exception as e:
+        return jsonify(error=str(e)), 500
 
 
 def login():
     data = request.get_json()
-    token = AuthService.login(data.get("email"), data.get("password"))
     
-    if token:
-        user = User.query.filter_by(email=data.get("email")).first()
-        refresh_token = AuthService.generate_refresh_token(user.id)
-        return (
-            jsonify(
-                {
-                    "user": user.to_dict(),  # Serialize the user object
-                    "token": token,
-                    "refresh_token": refresh_token,
-                    "expires_in": 2592000,
-                }
-            ),
-            200,
-        )
-    return jsonify(error="Invalid credentials"), 401
+    # Validate required fields
+    if not data.get("email"):
+        return jsonify(error="Email is required"), 400
+    if not data.get("password"):
+        return jsonify(error="Password is required"), 400
+    
+    try:
+        token = AuthService.login(data.get("email"), data.get("password"))
+        
+        if token:
+            user = User.query.filter_by(email=data.get("email")).first()
+            refresh_token = AuthService.generate_refresh_token(user.id)
+            return (
+                jsonify(
+                    {
+                        "user": user.to_dict(),
+                        "token": token,
+                        "refresh_token": refresh_token,
+                        "expires_in": 2592000,
+                    }
+                ),
+                200,
+            )
+        return jsonify(error="Invalid email or password"), 401
+    except Exception as e:
+        return jsonify(error=str(e)), 500
 
 
 @jwt_required()
