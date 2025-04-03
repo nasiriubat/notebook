@@ -96,7 +96,8 @@ def add_source():
 
                     processed_data = {
                         "text": text,
-                        "embedding": process_input(text)["embedding"],
+                        # "embedding": process_input(text)["embedding"],
+                        "embedding": "embedding",
                         "file_extension": file_extension,
                         "title": file.filename  # Use filename as title for files
                     }

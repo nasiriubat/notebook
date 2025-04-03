@@ -81,7 +81,28 @@ sudo systemctl status your-app
 
 # Check Nginx service
 sudo systemctl status nginx
+
 ```
+
+### if you face issues with running flask fb migrate command in server then follow
+```bash
+# Create a 1GB swap file
+sudo fallocate -l 1G /swapfile
+
+# Secure the file
+sudo chmod 600 /swapfile
+
+# Set it as swap
+sudo mkswap /swapfile
+
+# Enable it
+sudo swapon /swapfile
+
+# Make it permanent (so it survives reboots)
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
+
+Then try again
 
 ## 📝 Best Practices
 

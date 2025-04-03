@@ -5,8 +5,8 @@ from openai import OpenAI
 from app.models.chat import Chat
 from app.models.notebook import Notebook
 from app.models.source import Source
+from app.helper.ai_generate import openai_generate,ollama32_generate
 
-client = OpenAI(api_key=app.config["OPENAI_API_KEY"])
 
 @jwt_required()
 def send_chat_message():
@@ -57,21 +57,12 @@ def send_chat_message():
         db.session.add(user_message)
         
         # Prepare the messages for OpenAI
-        messages = [
-            {"role": "system", "content": "You are a helpful assistant that answers questions based on the provided context."},
-            {"role": "user", "content": f"Context: {context}\n\nQuestion: {query}"}
-        ]
         
-        # Get response from OpenAI with different parameters for regeneration
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=messages,
-            temperature=0.8 if is_regenerate else 0.7,  # Slightly higher temperature for regeneration
-            max_tokens=1000
-        )
+        prompt= f"Context: {context}\n\nQuestion: {query}"
         
         # Extract the assistant's response
-        reply = response.choices[0].message.content
+        reply = openai_generate(prompt,is_regenerate)
+        # reply = ollama32_generate(prompt,is_regenerate)
         
         # Save assistant message
         assistant_message = Chat(
