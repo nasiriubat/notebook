@@ -211,7 +211,7 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
   }
 
   return (
-    <Card className="p-3 h-100 d-flex flex-column">
+    <Card className="  d-flex flex-column  border-0 bg-transparent shadow-none">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h5 className="mb-0">Chat</h5>
         {messages.length > 0 && (

@@ -35,14 +35,22 @@ export function AuthProvider({ children }) {
       setUser(user);
       return user;
     } catch (error) {
+      // Handle specific error cases
       if (error.response?.status === 401) {
+        // Invalid credentials
         throw new Error('Invalid email or password');
       } else if (error.response?.status === 400) {
-        throw new Error(error.response.data.error || 'Invalid input');
+        // Bad request - missing fields or invalid format
+        throw new Error(error.response.data.error || 'Please check your email and password');
       } else if (error.response?.status === 500) {
+        // Server error
         throw new Error('Server error. Please try again later.');
-      } else {
+      } else if (error.message === 'Network Error') {
+        // Network error
         throw new Error('Network error. Please check your connection.');
+      } else {
+        // Unexpected error
+        throw new Error('An unexpected error occurred. Please try again.');
       }
     }
   };

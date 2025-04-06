@@ -60,12 +60,9 @@
 
 .chat-box {
   padding: 1rem;
-  background-color: #fff;
   border-radius: 0.5rem;
   box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
-  height: calc(100vh - 300px); /* Fixed height with some space for header and input */
-  min-height: 250px; /* Minimum height */
-  max-height: 400px; /* Maximum height */
+  height: 70vh; /* viewport height - navbar height - footer height */
   display: flex;
   flex-direction: column;
 }
@@ -73,13 +70,11 @@
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding-right: 0.5rem; /* Space for scrollbar */
+  /* padding-right: 0.5rem; */
   margin-bottom: 1rem;
-  /* hide scrollbar */
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-
 
 /* Custom scrollbar styling */
 .chat-messages::-webkit-scrollbar {
@@ -101,17 +96,16 @@
 }
 
 .chat-input {
-  background-color: #fff;
   border-radius: 0.5rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  margin-top: auto; /* Push to bottom */
+  margin-top: auto;
 }
 
 .chat-input textarea {
   border: none;
   resize: none;
   padding: 0.75rem;
-  max-height: 120px; /* Maximum height for textarea */
+  max-height: 120px;
   overflow-y: auto;
 }
 
@@ -128,3 +122,11 @@
   border-radius: 0 0.5rem 0.5rem 0;
   padding: 0.75rem 1.5rem;
 } 
+
+@media (max-width: 991px) {
+  .chat-box {
+    height: 60vh; /* viewport height - navbar height - footer height */
+  }
+}
+
+

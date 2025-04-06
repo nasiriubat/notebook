@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
-import { Navbar, Nav, Container, NavDropdown } from 'react-bootstrap';
+import React, { useState, useRef, useEffect } from 'react';
+import { Navbar, Nav, Container, Offcanvas } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { MdLightMode, MdDarkMode, MdPerson, MdMenu, MdClose } from "react-icons/md";
+import { MdLightMode, MdDarkMode, MdMenu, MdPerson, MdLogout, MdLogin } from "react-icons/md";
 import ChangePasswordModal from './ChangePasswordModal';
 
 export default function NavigationBar() {
   const navigate = useNavigate();
   const { logout: authLogout, user } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showDrawer, setShowDrawer] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -34,80 +34,130 @@ export default function NavigationBar() {
           <Navbar.Brand href="/" className={theme === 'light' ? 'text-dark' : 'text-light'}>
             GPT Lab
           </Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="me-auto">
-              <Nav.Link href="/" className={theme === 'light' ? 'text-dark' : 'text-light'}>
-                Home
-              </Nav.Link>
-            </Nav>
-            <Nav className="d-flex align-items-center">
+          <Nav className="ms-auto d-flex align-items-center">
+            <div className="d-flex align-items-center gap-2">
               <button
-                className={`btn btn-link nav-link me-2 ${theme === 'light' ? 'text-dark' : 'text-light'}`}
+                className={`btn btn-link nav-link ${theme === 'light' ? 'text-dark' : 'text-light'}`}
                 onClick={toggleTheme}
                 title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
               >
                 {theme === 'light' ? <MdDarkMode size={24} /> : <MdLightMode size={24} />}
               </button>
-              <NavDropdown 
-                title={<MdPerson size={24} className={theme === 'light' ? 'text-dark' : 'text-light'} />} 
-                id="basic-nav-dropdown"
-                align="end"
-                className="user-dropdown"
+              {/* Mobile Menu Button */}
+              <button
+                className={`btn btn-link nav-link d-md-none ${theme === 'light' ? 'text-dark' : 'text-light'}`}
+                onClick={() => setShowDrawer(true)}
+                title="Menu"
               >
-                <NavDropdown.Item onClick={() => setShowChangePassword(true)}>
-                  Change Password
-                </NavDropdown.Item>
-                <NavDropdown.Divider />
-                <NavDropdown.Item onClick={handleLogout}>
-                  Logout
-                </NavDropdown.Item>
-              </NavDropdown>
-            </Nav>
-          </Navbar.Collapse>
+                <MdMenu size={24} />
+              </button>
+              {/* Desktop Menu Items */}
+              <div className="d-none d-md-flex align-items-center gap-3">
+                {user ? (
+                  <>
+                    <button
+                      className={`btn btn-link nav-link ${theme === 'light' ? 'text-dark' : 'text-light'}`}
+                      onClick={() => setShowChangePassword(true)}
+                    >
+                      <MdPerson size={24} className="me-1" />
+                    </button>
+                    <button
+                      className="btn btn-link nav-link text-danger"
+                      onClick={handleLogout}
+                    >
+                      <MdLogout size={24} className="me-1" />
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    className={`btn btn-link nav-link ${theme === 'light' ? 'text-dark' : 'text-light'}`}
+                    onClick={() => navigate('/login')}
+                  >
+                    Login
+                  </button>
+                )}
+              </div>
+            </div>
+          </Nav>
         </Container>
       </Navbar>
+
+      {/* Mobile Drawer */}
+      <Offcanvas 
+        show={showDrawer} 
+        onHide={() => setShowDrawer(false)}
+        placement="start"
+        className={theme === 'light' ? 'bg-light' : 'bg-dark'}
+      >
+        <Offcanvas.Header closeButton className={theme === 'light' ? 'text-dark' : 'text-light'}>
+          <Offcanvas.Title>Menu</Offcanvas.Title>
+        </Offcanvas.Header>
+        <Offcanvas.Body>
+          <div className="d-flex flex-column gap-2">
+            {user ? (
+              <>
+                <button
+                  className={`btn btn-link nav-link text-start ${theme === 'light' ? 'text-dark' : 'text-light'}`}
+                  onClick={() => {
+                    setShowChangePassword(true);
+                    setShowDrawer(false);
+                  }}
+                >
+                  <MdPerson size={24} className="me-2" />
+                  Change Password
+                </button>
+                <button
+                  className="btn btn-link nav-link text-start text-danger"
+                  onClick={() => {
+                    handleLogout();
+                    setShowDrawer(false);
+                  }}
+                >
+                  <MdLogout size={24} className="me-2" />
+                  Logout
+                </button>
+              </>
+            ) : (
+              <button
+                className={`btn btn-link nav-link text-start ${theme === 'light' ? 'text-dark' : 'text-light'}`}
+                onClick={() => {
+                  navigate('/login');
+                  setShowDrawer(false);
+                }}
+              >
+                <MdLogin size={24} className="me-2" />
+                Login
+              </button>
+            )}
+          </div>
+        </Offcanvas.Body>
+      </Offcanvas>
+
       <ChangePasswordModal 
         show={showChangePassword} 
         onHide={() => setShowChangePassword(false)} 
       />
       <style>
         {`
-          .user-dropdown .dropdown-menu {
-            min-width: 200px;
-            margin-top: 0.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-            background-color: ${theme === 'light' ? '#fff' : '#343a40'};
-            border: 1px solid ${theme === 'light' ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.1)'};
-          }
-          .user-dropdown .dropdown-item {
-            padding: 0.5rem 1rem;
-            color: ${theme === 'light' ? '#333' : '#fff'};
-          }
-          .user-dropdown .dropdown-item:hover {
-            background-color: ${theme === 'light' ? '#f8f9fa' : '#495057'};
-            color: ${theme === 'light' ? '#000' : '#fff'};
-          }
-          .user-dropdown .dropdown-divider {
-            margin: 0.5rem 0;
-            border-color: ${theme === 'light' ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.1)'};
-          }
           .nav-link {
             padding: 0.5rem;
+            text-decoration: none;
           }
           .nav-link:hover {
             opacity: 0.8;
           }
-          .user-dropdown .dropdown-toggle {
-            padding: 0.5rem;
+          .offcanvas {
+            max-width: 300px;
           }
-          .user-dropdown .dropdown-toggle:hover,
-          .user-dropdown .dropdown-toggle:focus {
-            opacity: 0.8;
+          .offcanvas-header {
+            border-bottom: 1px solid ${theme === 'light' ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.1)'};
           }
-          .user-dropdown .dropdown-toggle::after {
-            color: ${theme === 'light' ? '#333' : '#fff'};
+          .offcanvas-body .nav-link {
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+          }
+          .offcanvas-body .nav-link:hover {
+            background-color: ${theme === 'light' ? '#f8f9fa' : '#495057'};
           }
         `}
       </style>

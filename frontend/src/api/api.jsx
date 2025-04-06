@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// const API_BASE_URL = "http://127.0.0.1:5000";
-const API_BASE_URL = "http://128.214.253.62:5000";
+const API_BASE_URL = "http://127.0.0.1:5000";
+// const API_BASE_URL = "http://128.214.253.62:5000";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -31,9 +31,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear token and redirect to login
+      // Clear token but preserve the original error response
       localStorage.removeItem("token");
-      window.location.href = "/login";
     }
     return Promise.reject(error);
   }

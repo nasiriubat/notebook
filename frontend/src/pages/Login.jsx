@@ -13,17 +13,26 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
+    setError(""); // Clear any previous errors
 
     try {
       await login(email, password);
       navigate("/");
     } catch (err) {
       setError(err.message || "Failed to login");
-    } finally {
       setLoading(false);
     }
+  };
+
+  const handleEmailChange = (e) => {
+    setEmail(e.target.value);
+    setError("");
+  };
+
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value);
+    setError("");
   };
 
   return (
@@ -37,22 +46,28 @@ export default function Login() {
                 <h2 className="text-center mb-4">Login</h2>
                 {error && (
                   <div className="alert alert-danger" role="alert">
+                    <i className="bi bi-exclamation-triangle me-2"></i>
                     {error}
                   </div>
                 )}
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} noValidate>
                   <div className="mb-3">
                     <label htmlFor="email" className="form-label">
                       Email
                     </label>
                     <input
                       type="email"
-                      className="form-control"
+                      className={`form-control ${error ? 'is-invalid' : ''}`}
                       id="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={handleEmailChange}
                       required
                     />
+                    {error && (
+                      <div className="invalid-feedback">
+                        Please check your credentials
+                      </div>
+                    )}
                   </div>
                   <div className="mb-3">
                     <label htmlFor="password" className="form-label">
@@ -60,10 +75,10 @@ export default function Login() {
                     </label>
                     <input
                       type="password"
-                      className="form-control"
+                      className={`form-control ${error ? 'is-invalid' : ''}`}
                       id="password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={handlePasswordChange}
                       required
                     />
                   </div>
