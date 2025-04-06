@@ -24,7 +24,7 @@ export default function Register() {
     try {
       setLoading(true);
       await register(name,email, password);
-      navigate("/");
+      navigate("/home");
     } catch (err) {
       setError(err.message || "Failed to create an account");
     } finally {
