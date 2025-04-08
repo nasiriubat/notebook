@@ -77,10 +77,31 @@ def add_source():
         if request.files:
             data['file'] = request.files.get('file')
 
-    file = data.get('file')
-    processed_data = {}
-
     try:
+        # Check for duplicate title at the beginning
+        title = None
+        if data.get('file'):
+            title = data['file'].filename
+        elif data.get('text'):
+            # For notes, generate title first
+            if str(data.get("is_note", "0")).lower() in ("true", "1", "yes"):
+                title = generate_unique_note_title(data.get("notebook_id"))
+            else:
+                title = "Pasted Text"
+        elif data.get('link'):
+            title = data.get('link')
+
+        if title:
+            existing_source = Source.query.filter_by(
+                notebook_id=data.get("notebook_id"),
+                title=title
+            ).first()
+            if existing_source:
+                return jsonify(error="A source with this title already exists"), 400
+
+        file = data.get('file')
+        processed_data = {}
+
         if file:
             if not allowed_file(file.filename):
                 return jsonify(error="Invalid file type"), 400
@@ -150,7 +171,7 @@ def add_source():
                         "text": data.get("text"),  # Keep full text for embedding
                         "summary": summary,  # Store summary in description
                         "file_extension": "txt",
-                        "title": generate_unique_note_title(data.get("notebook_id")),
+                        "title": title,  # Use the title we generated earlier
                         "file_id": file_id
                     }
                 else:
@@ -166,7 +187,7 @@ def add_source():
                         "text": data.get("text"),  # Keep full text for embedding
                         "summary": summary,  # Store summary in description
                         "file_extension": "txt",
-                        "title": "Pasted Text",
+                        "title": title,  # Use the title we generated earlier
                         "file_id": file_id
                     }
             except Exception as e:
@@ -190,7 +211,7 @@ def add_source():
                         "text": text,  # Keep full text for embedding
                         "summary": summary,  # Store summary in description
                         "file_extension": "youtube",
-                        "title": link,
+                        "title": title,  # Use the title we generated earlier
                         "file_id": file_id
                     }
                 else:
@@ -206,7 +227,7 @@ def add_source():
                         "text": text,  # Keep full text for embedding
                         "summary": summary,  # Store summary in description
                         "file_extension": "url",
-                        "title": link,
+                        "title": title,  # Use the title we generated earlier
                         "file_id": file_id
                     }
             except Exception as e:
@@ -218,14 +239,6 @@ def add_source():
 
         if not processed_data.get("text"):
             return jsonify(error="No text content could be extracted"), 400
-
-        # Check if title already exists in the notebook
-        existing_source = Source.query.filter_by(
-            notebook_id=data.get("notebook_id"),
-            title=processed_data["title"]
-        ).first()
-        if existing_source:
-            return jsonify(error="A source with this title already exists"), 400
 
         try:
             source = Source(
