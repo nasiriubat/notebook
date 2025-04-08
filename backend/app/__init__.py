@@ -38,11 +38,7 @@ from app.controllers.notebook_controller import create_notebook, get_notebooks, 
 from app.controllers.source_controller import add_source, get_sources, update_source, delete_source, get_source
 from app.controllers.chat_controller import send_chat_message, get_chat_messages, delete_chat_message
 
-@app.after_request
-def add_security_headers(response):
-    response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
-    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
-    return response
+
 # Auth routes
 app.add_url_rule('/register', 'register', register, methods=['POST'])
 app.add_url_rule('/login', 'login', login, methods=['POST'])
