@@ -141,32 +141,44 @@ export default function NotebookPage() {
           {/* Mobile/Tablet Layout */}
           <div className="d-lg-none h-100">
             <Tab.Container activeKey={activeTab} onSelect={setActiveTab} className="h-100">
-              <Nav variant="tabs" className="mb-3 nav-fill">
+              <Nav variant="tabs" className="modern-tabs mb-3">
                 <Nav.Item>
                   <Nav.Link 
                     eventKey="chat"
-                    className={`text-center py-3 ${activeTab === 'chat' ? 'bg-info text-white' : 'text-muted'}`}
+                    className={`modern-tab ${activeTab === 'chat' ? 'active' : ''}`}
                   >
-                    <FontAwesomeIcon icon={faMessage} className="me-2" />
-                    {getTranslation('chat')}
+                    <div className="tab-icon">
+                      <FontAwesomeIcon icon={faMessage} />
+                    </div>
+                    <div className="tab-label">
+                      {getTranslation('chat')}
+                    </div>
                   </Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
                   <Nav.Link 
                     eventKey="sources"
-                    className={`text-center py-3 ${activeTab === 'sources' ? 'bg-info text-white' : 'text-muted'}`}
+                    className={`modern-tab ${activeTab === 'sources' ? 'active' : ''}`}
                   >
-                    <FontAwesomeIcon icon={faBook} className="me-2" />
-                    {getTranslation('sources')}
+                    <div className="tab-icon">
+                      <FontAwesomeIcon icon={faBook} />
+                    </div>
+                    <div className="tab-label">
+                      {getTranslation('sources')}
+                    </div>
                   </Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
                   <Nav.Link 
                     eventKey="notes"
-                    className={`text-center py-3 ${activeTab === 'notes' ? 'bg-info text-white' : 'text-muted'}`}
+                    className={`modern-tab ${activeTab === 'notes' ? 'active' : ''}`}
                   >
-                    <FontAwesomeIcon icon={faStickyNote} className="me-2" />
-                    {getTranslation('notes')}
+                    <div className="tab-icon">
+                      <FontAwesomeIcon icon={faStickyNote} />
+                    </div>
+                    <div className="tab-label">
+                      {getTranslation('notes')}
+                    </div>
                   </Nav.Link>
                 </Nav.Item>
               </Nav>
@@ -198,20 +210,243 @@ export default function NotebookPage() {
         </div>
       </Container>
       
-      <style>
-        {`
-          .footer {
-            background-color: var(--bs-body-bg);
-            border-top: 1px solid var(--bs-border-color);
+      <style>{`
+        .footer {
+          background-color: var(--bs-body-bg);
+          border-top: 1px solid var(--bs-border-color);
+        }
+        .tab-content {
+          height: calc(100% - 80px);
+        }
+        .tab-pane {
+          height: 100%;
+        }
+
+        /* Modern Tabs Styling */
+        .modern-tabs {
+          display: flex;
+          justify-content: space-around;
+          background: var(--bs-body-bg);
+          border: 1px solid var(--bs-border-color);
+          padding: 0.5rem;
+          border-radius: 1rem;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          margin-bottom: 1rem;
+          backdrop-filter: blur(10px);
+        }
+
+        .modern-tab {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 0.75rem 1rem;
+          border: none;
+          background: transparent;
+          color: var(--bs-gray-600);
+          transition: all 0.3s ease;
+          position: relative;
+          border-radius: 0.75rem;
+          flex: 1;
+          margin: 0 0.25rem;
+        }
+
+        .modern-tab:hover {
+          color: var(--bs-primary);
+          background: rgba(var(--bs-primary-rgb), 0.1);
+        }
+
+        .modern-tab.active {
+          color: var(--bs-primary);
+          background: rgba(var(--bs-primary-rgb), 0.15);
+        }
+
+        .modern-tab.active::after {
+          content: '';
+          position: absolute;
+          bottom: -0.5rem;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 4px;
+          height: 4px;
+          background: var(--bs-primary);
+          border-radius: 50%;
+          animation: pulse 2s infinite;
+        }
+
+        .tab-icon {
+          font-size: 1.25rem;
+          margin-bottom: 0.25rem;
+          transition: transform 0.3s ease;
+          color: inherit;
+        }
+
+        .modern-tab:hover .tab-icon {
+          transform: translateY(-2px);
+        }
+
+        .tab-label {
+          font-size: 0.75rem;
+          font-weight: 500;
+          white-space: nowrap;
+          color: inherit;
+        }
+
+        @keyframes pulse {
+          0% {
+            transform: translateX(-50%) scale(1);
+            opacity: 1;
           }
-          .tab-content {
-            height: calc(100% - 60px);
+          50% {
+            transform: translateX(-50%) scale(1.5);
+            opacity: 0.5;
           }
-          .tab-pane {
-            height: 100%;
+          100% {
+            transform: translateX(-50%) scale(1);
+            opacity: 1;
           }
-        `}
-      </style>
+        }
+
+        /* Dark mode adjustments */
+        @media (prefers-color-scheme: dark) {
+          .modern-tabs {
+            background: rgba(33, 37, 41, 0.8);
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+          }
+
+          .modern-tab {
+            color: var(--bs-gray-400);
+          }
+
+          .modern-tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--bs-primary);
+          }
+
+          .modern-tab.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--bs-primary);
+          }
+
+          /* Enhanced dark mode for source tab */
+          .card {
+            background: rgba(33, 37, 41, 0.8) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+          }
+
+          .source-input-area {
+            background: rgba(33, 37, 41, 0.8) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 0.5rem !important;
+            padding: 1rem !important;
+            margin-bottom: 1rem !important;
+            backdrop-filter: blur(10px) !important;
+            color: var(--bs-gray-300) !important;
+          }
+
+          .source-input-area:hover {
+            border-color: rgba(255, 255, 255, 0.2) !important;
+            background: rgba(33, 37, 41, 0.9) !important;
+          }
+
+          .source-input-area .form-select,
+          .source-input-area .form-control {
+            background-color: rgba(33, 37, 41, 0.8) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            color: var(--bs-gray-300) !important;
+          }
+
+          .source-input-area .form-select:focus,
+          .source-input-area .form-control:focus {
+            background-color: rgba(33, 37, 41, 0.9) !important;
+            border-color: var(--bs-primary) !important;
+            color: var(--bs-gray-300) !important;
+          }
+
+          .source-input-area .text-muted {
+            color: var(--bs-gray-400) !important;
+          }
+
+          .source-input-area .btn-outline-secondary {
+            color: var(--bs-gray-400) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+          }
+
+          .source-input-area .btn-outline-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            border-color: var(--bs-gray-400) !important;
+          }
+
+          .source-input-area .alert {
+            background-color: rgba(33, 37, 41, 0.8) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            color: var(--bs-gray-300) !important;
+          }
+
+          .source-input-area .alert-warning {
+            background-color: rgba(255, 193, 7, 0.1) !important;
+            border-color: rgba(255, 193, 7, 0.2) !important;
+            color: var(--bs-warning) !important;
+          }
+
+          .source-input-area .alert-info {
+            background-color: rgba(13, 202, 240, 0.1) !important;
+            border-color: rgba(13, 202, 240, 0.2) !important;
+            color: var(--bs-info) !important;
+          }
+
+          .source-input-area .alert-danger {
+            background-color: rgba(220, 53, 69, 0.1) !important;
+            border-color: rgba(220, 53, 69, 0.2) !important;
+            color: var(--bs-danger) !important;
+          }
+
+          /* Icons and buttons */
+          .react-icons {
+            color: var(--bs-gray-400);
+          }
+
+          .btn-outline-secondary {
+            color: var(--bs-gray-400) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+          }
+
+          .btn-outline-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            border-color: var(--bs-gray-400) !important;
+          }
+
+          /* Dropdown menu */
+          .dropdown-menu {
+            background-color: rgba(33, 37, 41, 0.95) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+          }
+
+          .dropdown-item {
+            color: var(--bs-gray-300) !important;
+          }
+
+          .dropdown-item:hover {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            color: var(--bs-gray-100) !important;
+          }
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 576px) {
+          .modern-tab {
+            padding: 0.5rem 0.75rem;
+          }
+
+          .tab-icon {
+            font-size: 1.1rem;
+          }
+
+          .tab-label {
+            font-size: 0.7rem;
+          }
+        }
+      `}</style>
     </div>
   );
 }
