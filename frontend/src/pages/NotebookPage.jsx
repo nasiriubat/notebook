@@ -85,7 +85,7 @@ export default function NotebookPage() {
           </Spinner>
         </Container>
         <footer className="footer py-2 text-center">
-          <span className="text-muted">GPT-LAB 2023</span>
+          <span className="text-muted">GPT-LAB 2025</span>
         </footer>
       </div>
     );
@@ -99,7 +99,7 @@ export default function NotebookPage() {
           <Alert variant="danger" className="mb-4">Notebook not found</Alert>
         </Container>
         <footer className="footer py-2 text-center">
-          <span className="text-muted">GPT-LAB 2023</span>
+          <span className="text-muted">GPT-LAB 2025</span>
         </footer>
       </div>
     );
@@ -197,7 +197,7 @@ export default function NotebookPage() {
         </div>
       </Container>
       <footer className="footer py-2 text-center">
-        <span className="text-muted">GPT-LAB 2023</span>
+        <span className="text-muted">GPT-LAB 2025</span>
       </footer>
       <style>
         {`
