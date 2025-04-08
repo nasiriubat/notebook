@@ -326,133 +326,132 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
       )}
       
       {/* Input Type Selection */}
-      <Form.Select 
-        className="mb-3"
-        value={selectedInputType}
-        onChange={handleInputTypeChange}
-      >
-        <option value="file">{getTranslation('fileUpload')}</option>
-        <option value="text">{getTranslation('textInput')}</option>
-        <option value="link">{getTranslation('webLink')}</option>
-      </Form.Select>
+      <div className="source-input-area">
+        <Form.Select 
+          className="mb-3"
+          value={selectedInputType}
+          onChange={handleInputTypeChange}
+        >
+          <option value="file">{getTranslation('fileUpload')}</option>
+          <option value="text">{getTranslation('textInput')}</option>
+          <option value="link">{getTranslation('webLink')}</option>
+        </Form.Select>
 
-      {/* File Upload Section */}
-      {selectedInputType === "file" && (
-        <>
-          <div
-            className={`upload-area p-3 text-center mb-2 ${
-              dragging ? "border border-primary" : "border border-dashed"
-            }`}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragging(true);
-            }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={handleDrop}
-            style={{ cursor: "pointer" }}
-          >
-            <input
-              type="file"
-              id="file-upload"
-              className="d-none"
-              onChange={handleFileSelect}
-              disabled={uploading}
-              accept={ALLOWED_FILE_TYPES.map(type => `.${type}`).join(',')}
-            />
-            <div 
-              onClick={() => document.getElementById('file-upload').click()}
-              className="mb-0"
+        {/* File Upload Section */}
+        {selectedInputType === "file" && (
+          <>
+            <div
+              className={`upload-area p-3 text-center mb-2 ${
+                dragging ? "border border-primary" : "border border-dashed"
+              }`}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragging(true);
+              }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={handleDrop}
+              style={{ cursor: "pointer" }}
             >
-              {uploading ? (
-                <Spinner animation="border" size="sm" className="me-2" />
-              ) : (
-                <MdCloudUpload className="me-2 react-icons" />
-              )}
-              {uploading ? getTranslation('uploading') : getTranslation('uploadFile')}
-            </div>
-          </div>
-          <Alert variant="warning" className="mb-3 py-2 text-center">
-            <small className="d-block mb-1">
-              <i className="bi bi-exclamation-triangle me-1"></i>
-              {ALLOWED_FILE_TYPES.join(', ')} 
-            </small>
-            <small className="d-block">
-              <i className="bi bi-exclamation-triangle me-1"></i>
-              {getTranslation('maxFileSize')}
-            </small>
-          </Alert>
-          {fileError && (
-            <Alert variant="danger">
-              {fileError}
-            </Alert>
-          )}
-        </>
-      )}
-
-      {/* Text Input Section */}
-      {selectedInputType === "text" && (
-        <div className="mb-3">
-          {Object.entries(textInputs).map(([inputId, text]) => (
-            <div key={inputId} className="mb-3">
-              <Form.Control
-                as="textarea"
-                rows={4}
-                className="mb-2"
-                value={text}
-                onChange={(e) => setTextInputs(prev => ({
-                  ...prev,
-                  [inputId]: e.target.value
-                }))}
-                placeholder={getTranslation('enterText')}
-                maxLength={MAX_TEXT_LENGTH}
+              <input
+                type="file"
+                id="file-upload"
+                className="d-none"
+                onChange={handleFileSelect}
+                disabled={uploading}
+                accept={ALLOWED_FILE_TYPES.map(type => `.${type}`).join(',')}
               />
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <small className="text-muted">
-                  {text.length}/{MAX_TEXT_LENGTH} {getTranslation('characters')}
-                </small>
-              </div>
-              <div className="d-flex gap-2">
-                <Button variant="outline-secondary" className="flex-grow-1" onClick={() => handlePaste(inputId)}>
-                  <MdContentPaste className="me-1 react-icons" style={{ fontSize: '1rem' }} /> {getTranslation('paste')}
-                </Button>
-                <Button variant="primary" className="flex-grow-1" onClick={() => handleTextSubmit(inputId)} disabled={uploading}>
-                  <MdSend className="me-1 react-icons" style={{ fontSize: '1rem' }} /> {getTranslation('send')}
-                </Button>
+              <div 
+                onClick={() => document.getElementById('file-upload').click()}
+                className="mb-0"
+              >
+                {uploading ? (
+                  <Spinner animation="border" size="sm" className="me-2" />
+                ) : (
+                  <MdCloudUpload className="me-2 react-icons" />
+                )}
+                {uploading ? getTranslation('uploading') : getTranslation('uploadFile')}
               </div>
             </div>
-          ))}
-        </div>
-      )}
+            <Alert variant="warning" className="mb-2 py-1 text-center ">
+              <small className="d-block mb-1">
+                <i className="bi bi-exclamation-triangle me-1"></i>
+                {ALLOWED_FILE_TYPES.join(', ')} 
+                {getTranslation('maxFileSize')}
+              </small>
+            </Alert>
+            {fileError && (
+              <Alert variant="danger">
+                {fileError}
+              </Alert>
+            )}
+          </>
+        )}
 
-      {/* Link Input Section */}
-      {selectedInputType === "link" && (
-        <div className="mb-3">
-          <div className="input-group">
-            <Form.Control
-              type="url"
-              value={linkInput}
-              onChange={(e) => setLinkInput(e.target.value)}
-              placeholder={getTranslation('enterWebLink')}
-            />
-            <Button variant="outline-secondary" onClick={() => handlePaste('link')}>
-              <MdContentPaste className="react-icons" style={{ fontSize: '1.2rem' }} />
-            </Button>
-            <Button variant="primary" onClick={handleLinkSubmit} disabled={uploading}>
-              <MdSend className="react-icons" style={{ fontSize: '1.2rem' }} />
-            </Button>
+        {/* Text Input Section */}
+        {selectedInputType === "text" && (
+          <div className="mb-3">
+            {Object.entries(textInputs).map(([inputId, text]) => (
+              <div key={inputId} className="mb-3">
+                <Form.Control
+                  as="textarea"
+                  rows={4}
+                  className="mb-2"
+                  value={text}
+                  onChange={(e) => setTextInputs(prev => ({
+                    ...prev,
+                    [inputId]: e.target.value
+                  }))}
+                  placeholder={getTranslation('enterText')}
+                  maxLength={MAX_TEXT_LENGTH}
+                />
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <small className="text-muted">
+                    {text.length}/{MAX_TEXT_LENGTH} {getTranslation('characters')}
+                  </small>
+                </div>
+                <div className="d-flex gap-2">
+                  <Button variant="outline-secondary" className="flex-grow-1" onClick={() => handlePaste(inputId)}>
+                    <MdContentPaste className="me-1 react-icons" style={{ fontSize: '1rem' }} /> {getTranslation('paste')}
+                  </Button>
+                  <Button variant="primary" className="flex-grow-1" onClick={() => handleTextSubmit(inputId)} disabled={uploading}>
+                    <MdSend className="me-1 react-icons" style={{ fontSize: '1rem' }} /> {getTranslation('send')}
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
-          <small className="text-muted mt-2 d-block">
-            {getTranslation('supportsLinks')} <br />
-            <small>{getTranslation('supportsYoutube')}</small>
-          </small>
-        </div>
-      )}
+        )}
 
-      {inputError && (
-        <Alert variant="danger">
-          {inputError}
-        </Alert>
-      )}
+        {/* Link Input Section */}
+        {selectedInputType === "link" && (
+          <div className="mb-3">
+            <div className="input-group">
+              <Form.Control
+                type="url"
+                value={linkInput}
+                onChange={(e) => setLinkInput(e.target.value)}
+                placeholder={getTranslation('enterWebLink')}
+              />
+              <Button variant="outline-secondary" onClick={() => handlePaste('link')}>
+                <MdContentPaste className="react-icons" style={{ fontSize: '1.2rem' }} />
+              </Button>
+              <Button variant="primary" onClick={handleLinkSubmit} disabled={uploading}>
+                <MdSend className="react-icons" style={{ fontSize: '1.2rem' }} />
+              </Button>
+            </div>
+            <small className="text-muted mt-2 d-block">
+              {getTranslation('supportsLinks')} <br />
+              <small>{getTranslation('supportsYoutube')}</small>
+            </small>
+          </div>
+        )}
+
+        {inputError && (
+          <Alert variant="danger">
+            {inputError}
+          </Alert>
+        )}
+      </div>
 
       <div className="sources-list">
         {sources.length > 0 ? (

@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useContext, useEffect, useState, useCallback } from "react";
 import { Container, Row, Col, Button, Spinner, Alert, Nav, Tab } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { getTranslation } from "../utils/ln";
 import { 
   faArrowLeft, 
   faBook, 
@@ -147,7 +148,7 @@ export default function NotebookPage() {
                     className={`text-center py-3 ${activeTab === 'chat' ? 'bg-info text-white' : 'text-muted'}`}
                   >
                     <FontAwesomeIcon icon={faMessage} className="me-2" />
-                    Chat
+                    {getTranslation('chat')}
                   </Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
@@ -156,7 +157,7 @@ export default function NotebookPage() {
                     className={`text-center py-3 ${activeTab === 'sources' ? 'bg-info text-white' : 'text-muted'}`}
                   >
                     <FontAwesomeIcon icon={faBook} className="me-2" />
-                    Sources
+                    {getTranslation('sources')}
                   </Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
@@ -165,7 +166,7 @@ export default function NotebookPage() {
                     className={`text-center py-3 ${activeTab === 'notes' ? 'bg-info text-white' : 'text-muted'}`}
                   >
                     <FontAwesomeIcon icon={faStickyNote} className="me-2" />
-                    Notes
+                    {getTranslation('notes')}
                   </Nav.Link>
                 </Nav.Item>
               </Nav>
@@ -196,9 +197,7 @@ export default function NotebookPage() {
           </div>
         </div>
       </Container>
-      <footer className="footer py-2 text-center">
-        <span className="text-muted">GPT-LAB 2025</span>
-      </footer>
+      
       <style>
         {`
           .footer {

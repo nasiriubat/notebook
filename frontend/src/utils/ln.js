@@ -50,7 +50,7 @@ export const translations = {
         enterYoutubeLink: "Enter YouTube link...",
         supportsLinks: "Supports both web links and YouTube links",
         characters: "characters",
-        maxFileSize: "Max: 10MB",
+        maxFileSize: ", Max: 10MB",
         allowedTypes: "Allowed file types",
         editSourceTitle: "Edit Source Title",
         enterSourceTitle: "Enter source title",
@@ -67,6 +67,7 @@ export const translations = {
         supportsYoutube: "Supports YouTube links",
 
         // Chat
+        notes: "Notes",
         addNote: "Add Note",
         chat: "Chat",
         startConversation: "Start a conversation with your sources",
@@ -144,6 +145,7 @@ export const translations = {
     },
     fi: {
         // home page
+        notes: "Muistiinpanot",
         create:"Luo",
         noNotebookYet: "Ei muistikirjoja vielä",
         createYourFirstNotebook: "Luo ensimmäinen muistikirjasi aloittaaksesi",
@@ -201,7 +203,7 @@ export const translations = {
         enterYoutubeLink: "Syötä YouTube-linkki...",
         supportsLinks: "Tukee sekä verkkolinkkejä että YouTube-linkkejä",
         characters: "merkkiä",
-        maxFileSize: "Maksimi: 10MB",
+        maxFileSize: ", Maksimi: 10MB",
         allowedTypes: "Sallitut tiedostotyypit",
         editSourceTitle: "Muokkaa lähteen otsikkoa",
         enterSourceTitle: "Syötä lähteen otsikko",
