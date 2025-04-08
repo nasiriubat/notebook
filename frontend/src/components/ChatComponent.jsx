@@ -18,10 +18,10 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
   useEffect(() => {
     const loadMessages = async () => {
       if (!notebookId) return;
-      
+
       setLoading(true);
       setError(null);
-      
+
       try {
         const response = await getChatMessages(notebookId);
         setMessages(response.data.messages);
@@ -55,17 +55,13 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
       setMessages(prev => [...prev, { role: "user", content: query }]);
       setQuery("");
 
-      // Prepare context from selected sources
-      const context = selectedSources.length > 0
-        ? selectedSources.map(source => source.description).join('\n')
-        : '';
+
 
       // Get source IDs from selected sources
       const sourceIds = selectedSources.map(source => source.id);
 
       // Log the request data for debugging
       console.log('Sending chat message with data:', {
-        context,
         query: query.trim(),
         notebook_id: notebookId,
         source_ids: sourceIds
@@ -73,15 +69,14 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
 
       // Send message to backend with proper format
       const response = await sendChatMessage({
-        context,
         query: query.trim(),
         notebook_id: notebookId,
         source_ids: sourceIds
       });
-      
+
       // Add bot response with sources
-      setMessages(prev => [...prev, { 
-        role: "assistant", 
+      setMessages(prev => [...prev, {
+        role: "assistant",
         content: response.data.reply,
         sources: response.data.sources,
         warning: response.data.warning
@@ -89,11 +84,11 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
     } catch (err) {
       console.error("Error sending message:", err);
       // More detailed error message
-      const errorMessage = err.response?.data?.error || 
-                          err.response?.data?.message || 
-                          "Failed to send message";
+      const errorMessage = err.response?.data?.error ||
+        err.response?.data?.message ||
+        "Failed to send message";
       setError(errorMessage);
-      
+
       // If unauthorized, remove the user message we added
       if (err.response?.status === 403) {
         setMessages(prev => prev.slice(0, -1));
@@ -123,7 +118,7 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
         type: 'text',
         is_note: true
       });
-      
+
       // Show success message
       setError(null);
       // Notify parent component about the new source
@@ -165,10 +160,10 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
         source_ids: sourceIds,
         regenerate: true
       });
-      
+
       // Add new bot response after the existing messages with sources
-      setMessages(prev => [...prev, { 
-        role: "assistant", 
+      setMessages(prev => [...prev, {
+        role: "assistant",
         content: response.data.reply,
         sources: response.data.sources,
         warning: response.data.warning
@@ -184,7 +179,7 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
   const handleDeleteChat = async () => {
     setDeleting(true);
     setError(null);
-    
+
     try {
       await deleteChatMessages(notebookId);
       setMessages([]); // Clear messages locally
@@ -239,8 +234,8 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
           <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
             Cancel
           </Button>
-          <Button 
-            variant="danger" 
+          <Button
+            variant="danger"
             onClick={handleDeleteChat}
             disabled={deleting}
           >
@@ -268,7 +263,7 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
           {error}
         </Alert>
       )}
-      <div 
+      <div
         className="chat-box flex-grow-1 d-flex flex-column mb-3"
       >
         <div className="chat-messages">
@@ -293,7 +288,13 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
                           <div className="source-tags">
                             {message.sources.map((source, idx) => (
                               <span key={idx} className="badge bg-secondary me-1">
-                                {source}
+                                {(() => {
+                                  const parts = source.split('.');
+                                  const name = parts[0];
+                                  const ext = parts[1] || '';
+                                  const shortName = name.length > 40 ? name.slice(0, 40) + '...' : name;
+                                  return `${shortName}.${ext}`;
+                                })()}
                               </span>
                             ))}
                           </div>

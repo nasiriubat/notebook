@@ -17,3 +17,6 @@ pillow
 flask-migrate
 openai
 flask-cors
+numpy
+tiktoken
+faiss-cpu

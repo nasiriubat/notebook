@@ -4,11 +4,15 @@ import requests
 import json
 
 
-def openai_generate(prompt, is_regenerate=False):
+def openai_generate(prompt, is_regenerate=False, summary=False):
     messages = [
         {
             "role": "system",
-            "content": "You are a helpful assistant that answers questions based on the provided context. Start directly with the answer.",
+            "content": (
+                "You are a summarizer that summarizes given text with important keywords."
+                if summary
+                else "You are a helpful assistant that answers questions based on the provided context. Start directly with the answer."
+            ),
         },
         {"role": "user", "content": prompt},
     ]

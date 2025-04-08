@@ -11,7 +11,10 @@ class User(db.Model):
     reset_token = db.Column(db.String(200), nullable=True)
     platform = db.Column(db.String(100), nullable=True)
     oauth_id = db.Column(db.String(100), nullable=True)
-    lol_id = db.Column(db.String(100), nullable=True)
+    # add column role, for the first user role will be admin automatically and for other user it will be user
+    role = db.Column(db.String(50), default='user')  # 'admin' or 'user'
+    is_active = db.Column(db.Boolean, default=True)  # Flag to indicate if the user is active
+    is_verified = db.Column(db.Boolean, default=False)  # Flag to indicate if the user is verified
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 

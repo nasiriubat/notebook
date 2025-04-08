@@ -11,6 +11,7 @@ class Source(db.Model):
     file_path = db.Column(db.String(200), nullable=True)  # Path to the source file (optional)
     faiss_file_name = db.Column(db.String(200), nullable=True)  # Path to FAISS index file (optional)
     is_note = db.Column(db.Boolean, default=False)  # Flag to identify if this is a note
+    file_id = db.Column(db.String(200), nullable=True)  # Unique identifier for the file in FAISS index
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -24,6 +25,7 @@ class Source(db.Model):
             "file_path": self.file_path,
             "faiss_file_name": self.faiss_file_name,
             "is_note": self.is_note,
+            "file_id": self.file_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }

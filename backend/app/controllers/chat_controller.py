@@ -6,16 +6,17 @@ from app.models.chat import Chat
 from app.models.notebook import Notebook
 from app.models.source import Source
 from app.helper.ai_generate import openai_generate,ollama32_generate
+from app.utils.embed_and_search import search_across_indices
 
 
 @jwt_required()
 def send_chat_message():
     data = request.get_json()
     query = data.get("query")
-    context = data.get("context", "")
     is_regenerate = data.get("regenerate", False)
     notebook_id = data.get("notebook_id")
     source_ids = data.get("source_ids", [])
+    context = ""
     
     if not query:
         return jsonify(error="Query is required"), 400
@@ -34,6 +35,7 @@ def send_chat_message():
             
         # Verify sources exist and belong to the notebook
         source_titles = []
+        used_source_titles = []
         if source_ids:
             sources = Source.query.filter(
                 Source.id.in_(source_ids),
@@ -43,6 +45,31 @@ def send_chat_message():
             # If some sources were deleted, we'll still proceed with the available ones
             if sources:
                 source_titles = [source.title for source in sources]
+                # Get file_ids for searching
+                file_ids = [source.file_id for source in sources if source.file_id]
+                
+                # Search across the selected sources
+                if file_ids:
+                    search_results = search_across_indices(query, file_ids, top_k=5)
+                    
+                    if search_results:
+                        # Use the matched chunks as context
+                        context = "\n\n".join([f"Relevant content from {source.title}:\n{result['chunk']}" 
+                                             for result in search_results 
+                                             for source in sources 
+                                             if source.file_id == result['file_id']])
+                        
+                        # Track which sources were actually used in the search results
+                        used_file_ids = set(result["file_id"] for result in search_results)
+                        used_source_titles = [source.title for source in sources if source.file_id in used_file_ids]
+                    else:
+                        # If no matches found in FAISS, use summaries of all selected sources as context
+                        context = "\n\n".join([f"Summary of {source.title}:\n{source.description}" for source in sources])
+                        used_source_titles = source_titles  # Mark all sources as used
+                else:
+                    # If no file_ids available, use summaries of all selected sources
+                    context = "\n\n".join([f"Summary of {source.title}:\n{source.description}" for source in sources])
+                    used_source_titles = source_titles
             else:
                 # If all sources were deleted, we'll use an empty context
                 context = ""
@@ -57,19 +84,20 @@ def send_chat_message():
         db.session.add(user_message)
         
         # Prepare the messages for OpenAI
-        
-        prompt= f"Context: {context}\n\nQuestion: {query}"
+        prompt = f"Context: {context}\n\nQuestion: {query}"
+        print("--------------------------")
+        print(f"Prompt: {prompt}")
         
         # Extract the assistant's response
-        reply = openai_generate(prompt,is_regenerate)
+        reply = openai_generate(prompt, is_regenerate)
         # reply = ollama32_generate(prompt,is_regenerate)
         
-        # Save assistant message
+        # Save assistant message with used sources
         assistant_message = Chat(
             notebook_id=notebook_id,
             message=reply,
             role="assistant",
-            sources=source_titles  # Store only the titles
+            sources=used_source_titles  # Store only the titles of sources that were actually used
         )
         db.session.add(assistant_message)
         db.session.commit()
@@ -77,7 +105,7 @@ def send_chat_message():
         return jsonify({
             "reply": reply,
             "message_id": assistant_message.id,
-            "sources": source_titles,  # Return only the titles
+            "sources": used_source_titles,  # Return only the titles of sources that were actually used
             "warning": "Some selected sources were deleted" if source_ids and not sources else None
         }), 200
         
