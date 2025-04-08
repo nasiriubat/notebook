@@ -32,7 +32,7 @@ export default function NavigationBar() {
       >
         <Container>
           <Navbar.Brand href="/" className={theme === 'light' ? 'text-dark' : 'text-light'}>
-            GPT Lab
+            ThinkSync
           </Navbar.Brand>
           <Nav className="ms-auto d-flex align-items-center">
             <div className="d-flex align-items-center gap-2">
