@@ -4,6 +4,7 @@ import { NotebookContext } from "../context/NotebookContext";
 import { MdMoreVert, MdEdit, MdDelete, MdOpenInNew, MdSource } from "react-icons/md";
 import { Modal } from "react-bootstrap";
 import "../styles/notebook-card.css";
+import { getTranslation } from "../utils/ln";
 
 export default function NotebookCard({ notebook, onDelete, onUpdate, viewMode = "grid" }) {
   const navigate = useNavigate();
@@ -73,7 +74,7 @@ export default function NotebookCard({ notebook, onDelete, onUpdate, viewMode = 
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'No date';
+    if (!dateString) return getTranslation('noDate');
     try {
       const date = new Date(dateString);
       return date.toLocaleDateString('en-US', {
@@ -82,7 +83,7 @@ export default function NotebookCard({ notebook, onDelete, onUpdate, viewMode = 
         day: 'numeric'
       });
     } catch (error) {
-      return 'Invalid Date';
+      return getTranslation('invalidDate');
     }
   };
 
@@ -131,7 +132,7 @@ export default function NotebookCard({ notebook, onDelete, onUpdate, viewMode = 
         <div className="card p-2 h-100">
           <div className="d-flex justify-content-center align-items-center" style={{ height: "200px" }}>
             <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
+              <span className="visually-hidden">{getTranslation('loading')}</span>
             </div>
           </div>
         </div>
@@ -160,13 +161,13 @@ export default function NotebookCard({ notebook, onDelete, onUpdate, viewMode = 
                 className="btn btn-sm btn-primary"
                 onClick={handleSave}
               >
-                Save
+                {getTranslation('save')}
               </button>
               <button
                 className="btn btn-sm btn-outline"
                 onClick={handleCancel}
               >
-                Cancel
+                {getTranslation('cancel')}
               </button>
             </div>
           </div>
@@ -178,7 +179,7 @@ export default function NotebookCard({ notebook, onDelete, onUpdate, viewMode = 
             ref={buttonRef}
             className="btn btn-link"
             onClick={toggleMenu}
-            title="More options"
+            title={getTranslation('moreOptions')}
           >
             <MdMoreVert size={20} />
           </button>
@@ -192,7 +193,7 @@ export default function NotebookCard({ notebook, onDelete, onUpdate, viewMode = 
                 }}
               >
                 <MdOpenInNew size={18} className="me-2" />
-                Open
+                {getTranslation('open')}
               </button>
               <button
                 className="menu-item"
@@ -202,7 +203,7 @@ export default function NotebookCard({ notebook, onDelete, onUpdate, viewMode = 
                 }}
               >
                 <MdEdit size={18} className="me-2" />
-                Edit
+                {getTranslation('edit')}
               </button>
               <button
                 className="menu-item text-danger"
@@ -212,7 +213,7 @@ export default function NotebookCard({ notebook, onDelete, onUpdate, viewMode = 
                 }}
               >
                 <MdDelete size={18} className="me-2" />
-                Delete
+                {getTranslation('delete')}
               </button>
             </div>
           )}
@@ -220,11 +221,11 @@ export default function NotebookCard({ notebook, onDelete, onUpdate, viewMode = 
       </div>
       <div className="notebook-footer">
         <span className="notebook-date">
-          Created {formatDate(notebook.createdAt)}
+          {getTranslation('created')} {formatDate(notebook.createdAt)}
         </span>
         <span className="notebook-sources">
           <MdSource size={16} className="me-1" />
-          {notebook.sources?.length || 0} sources
+          {notebook.sources?.length || 0} {getTranslation('sources')}
         </span>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { MdAdd, MdGridOn, MdList, MdDelete, MdEdit, MdMoreVert, MdOpenInNew, MdS
 import Navbar from "../components/Navbar";
 import NotebookCard from "../components/NotebookCard";
 import "../styles/home.css";
+import { getTranslation } from "../utils/ln";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -92,7 +93,7 @@ export default function Home() {
       <Navbar />
       <div className="container py-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h1 className="h2 mb-0">My Notebooks</h1>
+          <h1 className="h2 mb-0">{getTranslation("myNotebooks")}</h1>
           <div className="d-flex gap-2">
             <button
               className="btn btn-outline"
@@ -106,7 +107,7 @@ export default function Home() {
               onClick={() => setIsCreating(true)}
             >
               <MdAdd size={24} className="me-2" />
-              New Notebook
+              {getTranslation("createNotebook")}
             </button>
           </div>
         </div>
@@ -117,7 +118,7 @@ export default function Home() {
               <input
                 type="text"
                 className="form-control"
-                placeholder="Enter notebook name"
+                placeholder={getTranslation("createNotebookPlaceholder")}
                 value={newNotebookName}
                 onChange={(e) => setNewNotebookName(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handleCreateNotebook()}
@@ -126,7 +127,7 @@ export default function Home() {
                 className="btn btn-primary"
                 onClick={handleCreateNotebook}
               >
-                Create
+                {getTranslation("create")}
               </button>
               <button
                 className="btn btn-outline"
@@ -135,7 +136,7 @@ export default function Home() {
                   setNewNotebookName("");
                 }}
               >
-                Cancel
+                {getTranslation("cancel")}
               </button>
             </div>
           </div>
@@ -143,14 +144,14 @@ export default function Home() {
 
         {notebooks.length === 0 ? (
           <div className="empty-state">
-            <h3 className="text-muted mb-3">No notebooks yet</h3>
-            <p className="text-muted mb-4">Create your first notebook to get started</p>
+            <h3 className="text-muted mb-3">{getTranslation("noNotebookYet")}</h3>
+            <p className="text-muted mb-4">{getTranslation("createYourFirstNotebook")}</p>
             <button
               className="btn btn-primary"
-              onClick={() => setIsCreating(true)}
+              onClick={() => setIsCreating(true)  }
             >
               <MdAdd size={24} className="me-2" />
-              Create Notebook
+              {getTranslation("createNotebook")}
             </button>
           </div>
         ) : (

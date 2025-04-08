@@ -86,6 +86,8 @@ export const translations = {
         failedToDeleteChat: "Failed to delete chat",
 
         // Landing Page
+        yourAiNotebook: "Your AI-Powered Notebook",
+        landingDescription: "Create, organize, and collaborate on your notes with the power of AI. Transform your ideas into actionable insights with our intelligent notebook platform.",
         smartNotebooks: "Smart Notebooks",
         smartNotebooksDesc: "Create and organize your notebooks with ease",
         aiChat: "AI Chat",
@@ -115,9 +117,40 @@ export const translations = {
         error: "Error",
         success: "Success",
         warning: "Warning",
-        info: "Info"
+        info: "Info",
+
+        // home page
+        create:"Create",
+        myNotebooks: "My Notebooks",
+        newNotebook: "New Notebook",
+        switchToListView: "Switch to List View",
+        switchToGridView: "Switch to Grid View",
+        createNotebookPlaceholder: "Enter notebook name",
+        noNotebookYet: "No notebooks yet",
+        createYourFirstNotebook: "Create your first notebook to get started",
+
+        // Notebook Card
+        open: "Open",
+        edit: "Edit",
+        delete: "Delete",
+        save: "Save",
+        cancel: "Cancel",
+        moreOptions: "More options",
+        created: "Created",
+        sources: "sources",
+        noDate: "No date",
+        invalidDate: "Invalid Date",
+        loading: "Loading...",
     },
     fi: {
+        // home page
+        create:"Luo",
+        noNotebookYet: "Ei muistikirjoja vielä",
+        createYourFirstNotebook: "Luo ensimmäinen muistikirjasi aloittaaksesi",
+        myNotebooks: "Omat muistikirjat",
+        newNotebook: "Uusi muistikirja",
+        createNotebookPlaceholder: "Syötä muistikirjan nimi",
+        switchToListView: "Vaihda luettelonäkymään",
         // Authentication
         login: "Kirjaudu",
         register: "Rekisteröidy",
@@ -204,6 +237,8 @@ export const translations = {
         failedToDeleteChat: "Keskustelun poistaminen epäonnistui",
 
         // Landing Page
+        yourAiNotebook: "Tekoälyavusteinen muistikirjasi",
+        landingDescription: "Luo, järjestä ja tee yhteistyötä muistiinpanoissasi tekoälyn avulla. Muunna ideasi toimiviksi oivalluksiksi älykkään muistikirjaalustamme avulla.",
         smartNotebooks: "Älykkäät muistikirjat",
         smartNotebooksDesc: "Luo ja järjestä muistikirjojasi helposti",
         aiChat: "Tekoälykeskustelu",
@@ -233,7 +268,20 @@ export const translations = {
         error: "Virhe",
         success: "Onnistui",
         warning: "Varoitus",
-        info: "Tieto"
+        info: "Tieto",
+
+        // Notebook Card
+        open: "Avaa",
+        edit: "Muokkaa",
+        delete: "Poista",
+        save: "Tallenna",
+        cancel: "Peruuta",
+        moreOptions: "Lisää vaihtoehtoja",
+        created: "Luotu",
+        sources: "lähdettä",
+        noDate: "Ei päivämäärää",
+        invalidDate: "Virheellinen päivämäärä",
+        loading: "Ladataan...",
     }
 };
 
