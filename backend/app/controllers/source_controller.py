@@ -12,11 +12,12 @@ from app.utils.file_utils import (
     extract_text_from_webpage,
     extract_text_from_youtube,
 )
-from app.utils.embed_and_search import generate_and_store_embeddings
+from app.utils.embed_and_search import generate_and_store_embeddings, EMBEDDINGS_FOLDER
 from app.helper.ai_generate import openai_generate
 import traceback
 import tempfile
 import os
+import pathlib
 
 ALLOWED_EXTENSIONS = {"pdf", "docx", "txt", "jpg", "jpeg", "png"}
 
@@ -309,6 +310,29 @@ def delete_source(source_id):
     try:
         source = Source.query.filter_by(id=source_id).first()
         if source:
+            # Delete FAISS files if they exist
+            if source.file_id:
+                try:
+                    # Delete chunks file
+                    chunks_file = EMBEDDINGS_FOLDER / f"{source.file_id}_chunks.npy"
+                    if chunks_file.exists():
+                        chunks_file.unlink()
+                    
+                    # Delete embeddings file
+                    embeddings_file = EMBEDDINGS_FOLDER / f"{source.file_id}_embeddings.npy"
+                    if embeddings_file.exists():
+                        embeddings_file.unlink()
+                    
+                    # Delete FAISS index file
+                    index_file = EMBEDDINGS_FOLDER / f"{source.file_id}_index.faiss"
+                    if index_file.exists():
+                        index_file.unlink()
+                except Exception as e:
+                    print(f"Error deleting FAISS files: {str(e)}")
+                    print(traceback.format_exc())
+                    # Continue with source deletion even if FAISS files deletion fails
+            
+            # Delete the source from database
             db.session.delete(source)
             db.session.commit()
             return jsonify(message="Source deleted"), 200
