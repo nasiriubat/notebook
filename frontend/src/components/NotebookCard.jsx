@@ -25,8 +25,8 @@ export default function NotebookCard({ notebook, onDelete, onUpdate, viewMode = 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
-        menuRef.current && 
-        !menuRef.current.contains(event.target) && 
+        menuRef.current &&
+        !menuRef.current.contains(event.target) &&
         !buttonRef.current.contains(event.target)
       ) {
         setActiveMenu(false);
@@ -51,7 +51,7 @@ export default function NotebookCard({ notebook, onDelete, onUpdate, viewMode = 
       "linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%)", // Light teal
       "linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)", // Light neutral
     ];
-    
+
     // Convert ID to string and get a numeric value
     const idString = String(notebook.id);
     const numericValue = idString.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -88,9 +88,9 @@ export default function NotebookCard({ notebook, onDelete, onUpdate, viewMode = 
   };
 
   const handleCardClick = (e) => {
-    if (e.target.closest('.notebook-menu') || 
-        e.target.closest('.notebook-actions') || 
-        e.target.closest('.edit-form')) {
+    if (e.target.closest('.notebook-menu') ||
+      e.target.closest('.notebook-actions') ||
+      e.target.closest('.edit-form')) {
       return;
     }
     setIsLoading(true);
@@ -141,7 +141,7 @@ export default function NotebookCard({ notebook, onDelete, onUpdate, viewMode = 
   }
 
   return (
-    <div 
+    <div
       className={`notebook-card ${viewMode}`}
       onClick={handleCardClick}
       style={{
@@ -191,7 +191,9 @@ export default function NotebookCard({ notebook, onDelete, onUpdate, viewMode = 
             </div>
           </div>
         ) : (
-          <h3 className="notebook-title">{notebook.name}</h3>
+          <h3 className="notebook-title text-dark"> {notebook.name.length > 30
+            ? `${notebook.name.slice(0, 50)}...`
+            : notebook.name}</h3>
         )}
         <div className="notebook-actions">
           <button
@@ -238,8 +240,8 @@ export default function NotebookCard({ notebook, onDelete, onUpdate, viewMode = 
           )}
         </div>
       </div>
-      <div className="notebook-footer">
-        <span className="notebook-date">
+      <div className="notebook-footer text-dark">
+        <span className="notebook-date ">
           {getTranslation('created')} {formatDate(notebook.createdAt)}
         </span>
         <span className="notebook-sources">

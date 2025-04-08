@@ -32,7 +32,7 @@ const LanguageSwitcher = ({ className = '' }) => {
                 />
                 <label htmlFor="lang-fi">FI</label>
             </div>
-            <style jsx>{`
+            <style>{`
                 .language-switcher {
                     display: flex;
                     align-items: center;
