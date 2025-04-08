@@ -144,6 +144,25 @@ export default function NotebookCard({ notebook, onDelete, onUpdate, viewMode = 
     <div 
       className={`notebook-card ${viewMode}`}
       onClick={handleCardClick}
+      style={{
+        background: gradientStyle,
+        minHeight: "200px",
+        maxHeight: "200px",
+        position: "relative",
+        border: "none",
+        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)",
+        transition: "transform 0.2s, box-shadow 0.2s",
+        display: "flex",
+        flexDirection: "column"
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-2px)";
+        e.currentTarget.style.boxShadow = "0 8px 12px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.1)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08)";
+      }}
     >
       <div className="notebook-header">
         {isEditing ? (
