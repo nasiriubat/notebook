@@ -1,38 +1,40 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import Navbar from "../components/Navbar";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
+import { useAuth } from '../context/AuthContext';
+import { getTranslation } from '../utils/ln';
 
 export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(""); // Clear any previous errors
-
-    try {
-      await login(email, password);
-      navigate("/home");
-    } catch (err) {
-      setError(err.message || "Failed to login");
-      setLoading(false);
-    }
-  };
 
   const handleEmailChange = (e) => {
     setEmail(e.target.value);
-    setError("");
+    setError('');
   };
 
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
-    setError("");
+    setError('');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      await login(email, password);
+      navigate('/');
+    } catch (err) {
+      setError(err.response?.data?.error || getTranslation('invalidCredentials'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -43,7 +45,7 @@ export default function Login() {
           <div className="col-md-6 col-lg-4">
             <div className="card">
               <div className="card-body p-4">
-                <h2 className="text-center mb-4">Login</h2>
+                <h2 className="text-center mb-4">{getTranslation('login')}</h2>
                 {error && (
                   <div className="alert alert-danger" role="alert">
                     <i className="bi bi-exclamation-triangle me-2"></i>
@@ -53,7 +55,7 @@ export default function Login() {
                 <form onSubmit={handleSubmit} noValidate>
                   <div className="mb-3">
                     <label htmlFor="email" className="form-label">
-                      Email
+                      {getTranslation('email')}
                     </label>
                     <input
                       type="email"
@@ -65,13 +67,13 @@ export default function Login() {
                     />
                     {error && (
                       <div className="invalid-feedback">
-                        Please check your credentials
+                        {getTranslation('invalidCredentials')}
                       </div>
                     )}
                   </div>
                   <div className="mb-3">
                     <label htmlFor="password" className="form-label">
-                      Password
+                      {getTranslation('password')}
                     </label>
                     <input
                       type="password"
@@ -94,14 +96,14 @@ export default function Login() {
                         aria-hidden="true"
                       ></span>
                     ) : null}
-                    Login
+                    {getTranslation('login')}
                   </button>
                 </form>
                 <div className="text-center mt-3">
                   <p className="mb-0">
-                    Don't have an account?{" "}
+                    {getTranslation('dontHaveAccount')}{" "}
                     <Link to="/register" className="text-decoration-none">
-                      Register
+                      {getTranslation('register')}
                     </Link>
                   </p>
                 </div>

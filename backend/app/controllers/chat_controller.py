@@ -16,6 +16,7 @@ def send_chat_message():
     is_regenerate = data.get("regenerate", False)
     notebook_id = data.get("notebook_id")
     source_ids = data.get("source_ids", [])
+    language = data.get("language", "en")  # Default to English if not specified
     context = ""
     
     if not query:
@@ -83,8 +84,8 @@ def send_chat_message():
         )
         db.session.add(user_message)
         
-        # Prepare the messages for OpenAI
-        prompt = f"Context: {context}\n\nQuestion: {query}"
+        # Prepare the messages for OpenAI with language instruction
+        prompt = f"Context: {context}\n\nQuestion: {query}\n\nPlease respond in {language} language."
         print("--------------------------")
         print(f"Prompt: {prompt}")
         

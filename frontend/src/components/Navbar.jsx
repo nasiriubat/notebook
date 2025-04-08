@@ -5,6 +5,8 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { MdLightMode, MdDarkMode, MdMenu, MdPerson, MdLogout, MdLogin } from "react-icons/md";
 import ChangePasswordModal from './ChangePasswordModal';
+import LanguageSwitcher from './LanguageSwitcher';
+import { getTranslation } from '../utils/ln';
 
 export default function NavigationBar() {
   const navigate = useNavigate();
@@ -32,7 +34,7 @@ export default function NavigationBar() {
       >
         <Container>
           <Navbar.Brand href="/" className={theme === 'light' ? 'text-dark' : 'text-light'}>
-            ThinkSync
+            {import.meta.env.VITE_APP_NAME ? import.meta.env.VITE_APP_NAME : 'RagBook'}
           </Navbar.Brand>
           <Nav className="ms-auto d-flex align-items-center">
             <div className="d-flex align-items-center gap-2">
@@ -47,12 +49,13 @@ export default function NavigationBar() {
               <button
                 className={`btn btn-link nav-link d-md-none ${theme === 'light' ? 'text-dark' : 'text-light'}`}
                 onClick={() => setShowDrawer(true)}
-                title="Menu"
+                title={getTranslation('menu')}
               >
                 <MdMenu size={24} />
               </button>
               {/* Desktop Menu Items */}
               <div className="d-none d-md-flex align-items-center gap-3">
+                <LanguageSwitcher className="me-2" />
                 {user ? (
                   <>
                     <button
@@ -73,7 +76,7 @@ export default function NavigationBar() {
                     className={`btn btn-link nav-link ${theme === 'light' ? 'text-dark' : 'text-light'}`}
                     onClick={() => navigate('/login')}
                   >
-                    Login
+                    {getTranslation('login')}
                   </button>
                 )}
               </div>
@@ -90,7 +93,7 @@ export default function NavigationBar() {
         className={theme === 'light' ? 'bg-light' : 'bg-dark'}
       >
         <Offcanvas.Header closeButton className={theme === 'light' ? 'text-dark' : 'text-light'}>
-          <Offcanvas.Title>Menu</Offcanvas.Title>
+          <Offcanvas.Title>{getTranslation('menu')}</Offcanvas.Title>
         </Offcanvas.Header>
         <Offcanvas.Body>
           <div className="d-flex flex-column gap-2">
@@ -104,7 +107,7 @@ export default function NavigationBar() {
                   }}
                 >
                   <MdPerson size={24} className="me-2" />
-                  Change Password
+                  {getTranslation('changePassword')}
                 </button>
                 <button
                   className="btn btn-link nav-link text-start text-danger"
@@ -114,7 +117,7 @@ export default function NavigationBar() {
                   }}
                 >
                   <MdLogout size={24} className="me-2" />
-                  Logout
+                  {getTranslation('logout')}
                 </button>
               </>
             ) : (
@@ -126,9 +129,11 @@ export default function NavigationBar() {
                 }}
               >
                 <MdLogin size={24} className="me-2" />
-                Login
+                {getTranslation('login')}
               </button>
             )}
+                        <LanguageSwitcher className="mb-3" />
+
           </div>
         </Offcanvas.Body>
       </Offcanvas>

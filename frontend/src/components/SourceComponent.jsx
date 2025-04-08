@@ -4,6 +4,7 @@ import { MdSend, MdContentPaste, MdClose, MdCloudUpload, MdMoreVert, MdEdit, MdD
 import { Card, Form, Button, Alert, Spinner, ListGroup, Modal, Dropdown } from 'react-bootstrap';
 import { NotebookContext } from "../context/NotebookContext";
 import { useContext } from "react";
+import { getTranslation } from '../utils/ln';
 
 export default function SourceComponent({ notebookId, onSourceSelect, sources, onSourcesUpdate, onSourceDeleted }) {
   const { refreshNotebooks } = useContext(NotebookContext);
@@ -13,9 +14,8 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
   const [uploading, setUploading] = useState(false);
   const [creatingSource, setCreatingSource] = useState(false);
   const [selectedInputType, setSelectedInputType] = useState("file");
-  const [textInput, setTextInput] = useState("");
+  const [textInputs, setTextInputs] = useState({});
   const [linkInput, setLinkInput] = useState("");
-  const [youtubeInput, setYoutubeInput] = useState("");
   const [fileError, setFileError] = useState("");
   const [inputError, setInputError] = useState("");
   const [selectedSources, setSelectedSources] = useState(new Set());
@@ -34,7 +34,7 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
       const selectedArray = Array.from(selectedSources);
       onSourceSelect(selectedArray);
     }
-  }, [selectedSources]); // Remove onSourceSelect from dependencies
+  }, [selectedSources]);
 
   const handleDrop = async (e) => {
     e.preventDefault();
@@ -82,12 +82,12 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
       
       // Frontend validation
       if (!validateFileType(file)) {
-        setFileError(`File type not supported. Please upload one of: ${ALLOWED_FILE_TYPES.join(', ')}`);
+        setFileError(getTranslation('fileTypeNotSupported', { types: ALLOWED_FILE_TYPES.join(', ') }));
         return;
       }
 
       if (!validateFileSize(file)) {
-        setFileError(`File size (${(file.size / (1024 * 1024)).toFixed(2)}MB) exceeds 10MB limit`);
+        setFileError(getTranslation('fileSizeExceeded', { size: (file.size / (1024 * 1024)).toFixed(2) }));
         return;
       }
 
@@ -100,137 +100,104 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
       });
 
       if (response.data.error) {
-        setFileError(response.data.error);
+        setError(response.data.error);
         return;
       }
+
+      // Notify parent component about the new source
       if (onSourcesUpdate) {
         onSourcesUpdate();
       }
       setError(null);
     } catch (err) {
       console.error("Error uploading file:", err);
-      const errorMessage = err.response?.data?.error || err.message || "Failed to upload file. Please try again.";
-      setFileError(errorMessage);
+      setError(err.response?.data?.message || getTranslation('failedToUploadFile'));
     } finally {
       setUploading(false);
       setCreatingSource(false);
     }
   };
 
-  const handleTextSubmit = async () => {
+  const handleTextSubmit = async (inputId) => {
+    const text = textInputs[inputId];
+    if (!text?.trim() || uploading) return;
+
     try {
-      setInputError("");
       setCreatingSource(true);
-      
-      if (!textInput.trim()) {
-        setInputError("Please enter some text");
+      setError(null);
+
+      if (text.length > MAX_TEXT_LENGTH) {
+        setError(getTranslation('textTooLong', { max: MAX_TEXT_LENGTH }));
         return;
       }
 
-      if (textInput.length > MAX_TEXT_LENGTH) {
-        setInputError(`Text exceeds ${MAX_TEXT_LENGTH} characters limit`);
-        return;
-      }
-
-      setUploading(true);
       const formData = new FormData();
-      formData.append("text", textInput);
+      formData.append("text", text);
       formData.append("notebook_id", notebookId);
-      formData.append("is_note", "1");
+      formData.append("is_note", "0");
 
       const response = await uploadSource(formData);
       if (response.data.error) {
-        setInputError(response.data.error);
+        setError(response.data.error);
         return;
       }
-      setTextInput("");
+
+      // Clear only this specific text input
+      setTextInputs(prev => {
+        const newInputs = { ...prev };
+        delete newInputs[inputId];
+        return newInputs;
+      });
+
       if (onSourcesUpdate) {
         onSourcesUpdate();
       }
     } catch (err) {
-      console.error("Error uploading text:", err);
-      const errorMessage = err.response?.data?.error || err.message || "Failed to upload text";
-      setInputError(errorMessage);
+      console.error("Error creating text source:", err);
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.error || 
+                          getTranslation('failedToCreateTextSource');
+      setError(errorMessage);
     } finally {
-      setUploading(false);
       setCreatingSource(false);
     }
   };
 
   const handleLinkSubmit = async () => {
+    if (!linkInput.trim() || uploading) return;
+
     try {
-      setInputError("");
       setCreatingSource(true);
-      
-      if (!linkInput.trim()) {
-        setInputError("Please enter a link");
-        return;
-      }
+      setError(null);
 
+      const isYoutube = validateYoutubeUrl(linkInput);
       if (!validateUrl(linkInput)) {
-        setInputError("Please enter a valid URL");
+        setError(getTranslation('invalidUrl'));
         return;
       }
 
-      setUploading(true);
       const formData = new FormData();
       formData.append("link", linkInput);
       formData.append("notebook_id", notebookId);
+      formData.append("is_note", "0");
 
       const response = await uploadSource(formData);
       if (response.data.error) {
-        setInputError(response.data.error);
+        setError(response.data.error);
         return;
       }
+
       setLinkInput("");
       if (onSourcesUpdate) {
         onSourcesUpdate();
       }
     } catch (err) {
-      console.error("Error uploading link:", err);
-      const errorMessage = err.response?.data?.error || err.message || "Failed to upload link";
-      setInputError(errorMessage);
+      console.error("Error creating link source:", err);
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.error || 
+                          getTranslation('failedToCreateLinkSource');
+      setError(errorMessage);
     } finally {
-      setUploading(false);
-      setCreatingSource(false);
-    }
-  };
-
-  const handleYoutubeSubmit = async () => {
-    try {
-      setInputError("");
-      setCreatingSource(true);
-      
-      if (!youtubeInput.trim()) {
-        setInputError("Please enter a YouTube link");
-        return;
-      }
-
-      if (!validateYoutubeUrl(youtubeInput)) {
-        setInputError("Please enter a valid YouTube URL");
-        return;
-      }
-
-      setUploading(true);
-      const formData = new FormData();
-      formData.append("link", youtubeInput);
-      formData.append("notebook_id", notebookId);
-
-      const response = await uploadSource(formData);
-      if (response.data.error) {
-        setInputError(response.data.error);
-        return;
-      }
-      setYoutubeInput("");
-      if (onSourcesUpdate) {
-        onSourcesUpdate();
-      }
-    } catch (err) {
-      console.error("Error uploading YouTube link:", err);
-      const errorMessage = err.response?.data?.error || err.message || "Failed to upload YouTube link";
-      setInputError(errorMessage);
-    } finally {
-      setUploading(false);
       setCreatingSource(false);
     }
   };
@@ -250,7 +217,7 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
       setError(null);
     } catch (err) {
       console.error("Error deleting source:", err);
-      const errorMessage = err.response?.data?.error || err.message || "Failed to delete source";
+      const errorMessage = err.response?.data?.error || err.message || getTranslation('failedToDeleteSource');
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -269,24 +236,19 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
     });
   };
 
-  const handlePaste = async () => {
+  const handlePaste = async (inputId) => {
     try {
       const text = await navigator.clipboard.readText();
-      switch (selectedInputType) {
-        case "text":
-          setTextInput(text);
-          break;
-        case "link":
-          setLinkInput(text);
-          break;
-        case "youtube":
-          setYoutubeInput(text);
-          break;
-        default:
-          break;
+      if (selectedInputType === "text") {
+        setTextInputs(prev => ({
+          ...prev,
+          [inputId]: text
+        }));
+      } else if (selectedInputType === "link") {
+        setLinkInput(text);
       }
     } catch (err) {
-      setInputError("Failed to paste from clipboard");
+      setInputError(getTranslation('failedToPaste'));
     }
   };
 
@@ -298,7 +260,7 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
 
   const handleSaveEdit = async () => {
     if (!editTitle.trim()) {
-      setEditError("Title cannot be empty");
+      setEditError(getTranslation('titleCannotBeEmpty'));
       return;
     }
 
@@ -318,7 +280,7 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
       setEditError(null);
     } catch (err) {
       console.error("Error updating source:", err);
-      setEditError(err.response?.data?.error || "Failed to update source");
+      setEditError(err.response?.data?.error || getTranslation('failedToUpdateSource'));
     } finally {
       setLoading(false);
     }
@@ -327,16 +289,26 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
   const handleCopyDescription = async (description) => {
     try {
       await navigator.clipboard.writeText(description);
-      // You could add a toast notification here if you want
     } catch (err) {
-      setError("Failed to copy to clipboard");
+      setError(getTranslation('failedToCopy'));
+    }
+  };
+
+  const handleInputTypeChange = (e) => {
+    const newType = e.target.value;
+    setSelectedInputType(newType);
+    // Clear text inputs when switching to text type
+    if (newType === "text") {
+      setTextInputs({
+        "text-1": "" // Initialize with one empty text input
+      });
     }
   };
 
   if (loading && sources.length === 0) {
     return (
       <Card className="p-3">
-        <h5>Sources</h5>
+        <h5>{getTranslation('sources')}</h5>
         <div className="d-flex justify-content-center">
           <Spinner animation="border" variant="primary" />
         </div>
@@ -346,7 +318,7 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
 
   return (
     <Card className="p-3">
-      <h5>Sources</h5>
+      <h5>{getTranslation('sources')}</h5>
       {error && (
         <Alert variant="info">
           {error}
@@ -357,12 +329,11 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
       <Form.Select 
         className="mb-3"
         value={selectedInputType}
-        onChange={(e) => setSelectedInputType(e.target.value)}
+        onChange={handleInputTypeChange}
       >
-        <option value="file">File Upload</option>
-        <option value="text">Text Input</option>
-        <option value="link">Web Link</option>
-        <option value="youtube">YouTube Link</option>
+        <option value="file">{getTranslation('fileUpload')}</option>
+        <option value="text">{getTranslation('textInput')}</option>
+        <option value="link">{getTranslation('webLink')}</option>
       </Form.Select>
 
       {/* File Upload Section */}
@@ -397,7 +368,7 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
               ) : (
                 <MdCloudUpload className="me-2 react-icons" />
               )}
-              {uploading ? "Uploading..." : "Drag & drop files here or click to upload"}
+              {uploading ? getTranslation('uploading') : getTranslation('uploadFile')}
             </div>
           </div>
           <Alert variant="warning" className="mb-3 py-2 text-center">
@@ -407,7 +378,7 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
             </small>
             <small className="d-block">
               <i className="bi bi-exclamation-triangle me-1"></i>
-              Max: 10MB
+              {getTranslation('maxFileSize')}
             </small>
           </Alert>
           {fileError && (
@@ -421,28 +392,35 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
       {/* Text Input Section */}
       {selectedInputType === "text" && (
         <div className="mb-3">
-          <Form.Control
-            as="textarea"
-            rows={4}
-            className="mb-2"
-            value={textInput}
-            onChange={(e) => setTextInput(e.target.value)}
-            placeholder="Enter your text here..."
-            maxLength={MAX_TEXT_LENGTH}
-          />
-          <div className="d-flex justify-content-between align-items-center mb-2">
-            <small className="text-muted">
-              {textInput.length}/{MAX_TEXT_LENGTH} characters
-            </small>
-          </div>
-          <div className="d-flex gap-2">
-            <Button variant="outline-secondary" className="flex-grow-1" onClick={handlePaste}>
-              <MdContentPaste className="me-1 react-icons" style={{ fontSize: '1rem' }} /> Paste
-            </Button>
-            <Button variant="primary" className="flex-grow-1" onClick={handleTextSubmit} disabled={uploading}>
-              <MdSend className="me-1 react-icons" style={{ fontSize: '1rem' }} /> Send
-            </Button>
-          </div>
+          {Object.entries(textInputs).map(([inputId, text]) => (
+            <div key={inputId} className="mb-3">
+              <Form.Control
+                as="textarea"
+                rows={4}
+                className="mb-2"
+                value={text}
+                onChange={(e) => setTextInputs(prev => ({
+                  ...prev,
+                  [inputId]: e.target.value
+                }))}
+                placeholder={getTranslation('enterText')}
+                maxLength={MAX_TEXT_LENGTH}
+              />
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <small className="text-muted">
+                  {text.length}/{MAX_TEXT_LENGTH} {getTranslation('characters')}
+                </small>
+              </div>
+              <div className="d-flex gap-2">
+                <Button variant="outline-secondary" className="flex-grow-1" onClick={() => handlePaste(inputId)}>
+                  <MdContentPaste className="me-1 react-icons" style={{ fontSize: '1rem' }} /> {getTranslation('paste')}
+                </Button>
+                <Button variant="primary" className="flex-grow-1" onClick={() => handleTextSubmit(inputId)} disabled={uploading}>
+                  <MdSend className="me-1 react-icons" style={{ fontSize: '1rem' }} /> {getTranslation('send')}
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -454,9 +432,9 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
               type="url"
               value={linkInput}
               onChange={(e) => setLinkInput(e.target.value)}
-              placeholder="Enter web link or YouTube link..."
+              placeholder={getTranslation('enterWebLink')}
             />
-            <Button variant="outline-secondary" onClick={handlePaste}>
+            <Button variant="outline-secondary" onClick={() => handlePaste('link')}>
               <MdContentPaste className="react-icons" style={{ fontSize: '1.2rem' }} />
             </Button>
             <Button variant="primary" onClick={handleLinkSubmit} disabled={uploading}>
@@ -464,28 +442,9 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
             </Button>
           </div>
           <small className="text-muted mt-2 d-block">
-            Supports both web links and YouTube links
+            {getTranslation('supportsLinks')} <br />
+            <small>{getTranslation('supportsYoutube')}</small>
           </small>
-        </div>
-      )}
-
-      {/* YouTube Input Section */}
-      {selectedInputType === "youtube" && (
-        <div className="mb-3">
-          <div className="input-group">
-            <Form.Control
-              type="url"
-              value={youtubeInput}
-              onChange={(e) => setYoutubeInput(e.target.value)}
-              placeholder="Enter YouTube link..."
-            />
-            <Button variant="outline-secondary" onClick={handlePaste}>
-              <MdContentPaste className="react-icons" style={{ fontSize: '1.2rem' }} />
-            </Button>
-            <Button variant="primary" onClick={handleYoutubeSubmit} disabled={uploading}>
-              <MdSend className="react-icons" style={{ fontSize: '1.2rem' }} />
-            </Button>
-          </div>
         </div>
       )}
 
@@ -518,13 +477,13 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
                     </Dropdown.Toggle>
                     <Dropdown.Menu align="end">
                       <Dropdown.Item onClick={() => handleCopyDescription(src.description)}>
-                        <MdContentCopy className="me-2 react-icons" /> Copy Text
+                        <MdContentCopy className="me-2 react-icons" /> {getTranslation('copyText')}
                       </Dropdown.Item>
                       <Dropdown.Item onClick={() => handleEditSource(src)}>
-                        <MdEdit className="me-2 react-icons" /> Edit Title
+                        <MdEdit className="me-2 react-icons" /> {getTranslation('editTitle')}
                       </Dropdown.Item>
                       <Dropdown.Item onClick={() => handleDeleteSource(src.id)} className="text-danger">
-                        <MdDelete className="me-2 react-icons" /> Delete
+                        <MdDelete className="me-2 react-icons" /> {getTranslation('delete')}
                       </Dropdown.Item>
                     </Dropdown.Menu>
                   </Dropdown>
@@ -535,7 +494,7 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
               <ListGroup.Item className="d-flex align-items-center">
                 <div className="d-flex align-items-center">
                   <Spinner animation="border" size="sm" className="me-2" />
-                  <span>Creating source...</span>
+                  <span>{getTranslation('creatingSource')}</span>
                 </div>
               </ListGroup.Item>
             )}
@@ -545,10 +504,10 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
             {creatingSource ? (
               <div className="d-flex align-items-center justify-content-center">
                 <Spinner animation="border" size="sm" className="me-2" />
-                <span>Creating source...</span>
+                <span>{getTranslation('creatingSource')}</span>
               </div>
             ) : (
-              <span className="text-muted">No sources yet. Add one above.</span>
+              <span className="text-muted">{getTranslation('noSources')}</span>
             )}
           </div>
         )}
@@ -557,7 +516,7 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
       {/* Edit Title Modal */}
       <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Edit Source Title</Modal.Title>
+          <Modal.Title>{getTranslation('editSourceTitle')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {editError && (
@@ -567,25 +526,25 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
           )}
           <Form>
             <Form.Group>
-              <Form.Label>Title</Form.Label>
+              <Form.Label>{getTranslation('title')}</Form.Label>
               <Form.Control
                 type="text"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                placeholder="Enter source title"
+                placeholder={getTranslation('enterSourceTitle')}
               />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowEditModal(false)}>
-            Cancel
+            {getTranslation('cancel')}
           </Button>
           <Button variant="primary" onClick={handleSaveEdit} disabled={loading}>
             {loading ? (
               <Spinner animation="border" size="sm" className="me-2" />
             ) : null}
-            Save Changes
+            {getTranslation('saveChanges')}
           </Button>
         </Modal.Footer>
       </Modal>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { sendChatMessage, uploadSource, deleteChatMessages, getChatMessages } from "../api/api";
 import { FaPaperPlane, FaCopy, FaPlus, FaRedo, FaTrash } from "react-icons/fa";
 import { Card, Form, Button, Alert, Spinner, Modal } from 'react-bootstrap';
+import { getCurrentLanguage, getTranslation } from '../utils/ln';
 import './ChatComponent.css';
 
 const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
@@ -27,7 +28,7 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
         setMessages(response.data.messages);
       } catch (err) {
         console.error("Error loading chat messages:", err);
-        setError(err.response?.data?.message || "Failed to load chat messages");
+        setError(err.response?.data?.message || getTranslation('failedToLoadMessages'));
       } finally {
         setLoading(false);
       }
@@ -55,23 +56,18 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
       setMessages(prev => [...prev, { role: "user", content: query }]);
       setQuery("");
 
-
-
       // Get source IDs from selected sources
       const sourceIds = selectedSources.map(source => source.id);
 
-      // Log the request data for debugging
-      console.log('Sending chat message with data:', {
-        query: query.trim(),
-        notebook_id: notebookId,
-        source_ids: sourceIds
-      });
+      // Get current language
+      const currentLang = getCurrentLanguage();
 
       // Send message to backend with proper format
       const response = await sendChatMessage({
         query: query.trim(),
         notebook_id: notebookId,
-        source_ids: sourceIds
+        source_ids: sourceIds,
+        language: currentLang
       });
 
       // Add bot response with sources
@@ -83,10 +79,9 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
       }]);
     } catch (err) {
       console.error("Error sending message:", err);
-      // More detailed error message
       const errorMessage = err.response?.data?.error ||
         err.response?.data?.message ||
-        "Failed to send message";
+        getTranslation('failedToSendMessage');
       setError(errorMessage);
 
       // If unauthorized, remove the user message we added
@@ -126,7 +121,7 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
         onSourceAdded(response.data);
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to add to sources");
+      setError(err.response?.data?.message || getTranslation('failedToAddToSources'));
       console.error("Error adding to sources:", err);
     } finally {
       setLoading(false);
@@ -169,7 +164,7 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
         warning: response.data.warning
       }]);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to regenerate response");
+      setError(err.response?.data?.message || getTranslation('failedToRegenerate'));
       console.error("Error regenerating response:", err);
     } finally {
       setSending(false);
@@ -186,7 +181,7 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
       setShowDeleteModal(false);
     } catch (err) {
       console.error("Error deleting chat:", err);
-      setError(err.response?.data?.message || "Failed to delete chat");
+      setError(err.response?.data?.message || getTranslation('failedToDeleteChat'));
     } finally {
       setDeleting(false);
     }
@@ -195,10 +190,10 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
   if (loading && messages.length === 0) {
     return (
       <div className="card p-3">
-        <h5>Chat</h5>
+        <h5>{getTranslation('chat')}</h5>
         <div className="d-flex justify-content-center">
           <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
+            <span className="visually-hidden">{getTranslation('loading')}</span>
           </div>
         </div>
       </div>
@@ -206,9 +201,9 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
   }
 
   return (
-    <Card className="  d-flex flex-column  border-0 bg-transparent shadow-none">
+    <Card className="d-flex flex-column border-0 bg-transparent shadow-none">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h5 className="mb-0">Chat</h5>
+        <h5 className="mb-0">{getTranslation('chat')}</h5>
         {messages.length > 0 && (
           <Button
             variant="outline-danger"
@@ -217,7 +212,7 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
             className="d-flex align-items-center"
           >
             <FaTrash className="me-1" />
-            Clear Chat
+            {getTranslation('clearChat')}
           </Button>
         )}
       </div>
@@ -225,14 +220,14 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
       {/* Delete Confirmation Modal */}
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Clear Chat History</Modal.Title>
+          <Modal.Title>{getTranslation('clearChatHistory')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Are you sure you want to clear all chat messages? This action cannot be undone.
+          {getTranslation('clearChatConfirm')}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            Cancel
+            {getTranslation('cancel')}
           </Button>
           <Button
             variant="danger"
@@ -249,10 +244,10 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
                   aria-hidden="true"
                   className="me-2"
                 />
-                Deleting...
+                {getTranslation('deleting')}
               </>
             ) : (
-              'Delete'
+              getTranslation('delete')
             )}
           </Button>
         </Modal.Footer>
@@ -263,15 +258,13 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
           {error}
         </Alert>
       )}
-      <div
-        className="chat-box flex-grow-1 d-flex flex-column mb-3"
-      >
+      <div className="chat-box flex-grow-1 d-flex flex-column mb-3">
         <div className="chat-messages">
           <div className="d-flex flex-column">
             {messages.length === 0 ? (
               <div className="text-center text-muted py-5">
                 <i className="bi bi-chat-dots display-4 mb-3"></i>
-                <p className="mb-0">Start a conversation with your sources</p>
+                <p className="mb-0">{getTranslation('startConversation')}</p>
               </div>
             ) : (
               messages.map((message, index) => (
@@ -284,7 +277,7 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
                       {message.content}
                       {message.role === "assistant" && message.sources && message.sources.length > 0 && (
                         <div className="message-sources mt-2">
-                          <small className="text-muted">Sources:</small>
+                          <small className="text-muted">{getTranslation('sources')}:</small>
                           <div className="source-tags">
                             {message.sources.map((source, idx) => (
                               <span key={idx} className="badge bg-secondary me-1">
@@ -315,7 +308,7 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
                             size="sm"
                             className="action-button"
                             onClick={() => handleCopyMessage(message.content)}
-                            title="Copy message"
+                            title={getTranslation('copyMessage')}
                           >
                             <FaCopy />
                           </Button>
@@ -324,7 +317,7 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
                             size="sm"
                             className="action-button"
                             onClick={() => handleAddToSource(message.content)}
-                            title="Add to sources"
+                            title={getTranslation('addToSources')}
                           >
                             <FaPlus />
                           </Button>
@@ -333,7 +326,7 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
                             size="sm"
                             className="action-button"
                             onClick={() => handleRegenerate(index)}
-                            title="Regenerate response"
+                            title={getTranslation('regenerateResponse')}
                           >
                             <FaRedo />
                           </Button>
@@ -356,7 +349,7 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder={selectedSources?.length ? "Type your message..." : "Select sources to start chatting"}
+            placeholder={selectedSources?.length ? getTranslation('typeMessage') : getTranslation('selectSources')}
             disabled={sending || !selectedSources?.length}
           />
           <Button

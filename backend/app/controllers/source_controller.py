@@ -56,6 +56,25 @@ def generate_unique_note_title(notebook_id):
         counter += 1
 
 
+def generate_unique_text_title(notebook_id):
+    """Generate a unique title for a new text input."""
+    base_title = "Text Note"
+    counter = 1
+    title = base_title
+    
+    while True:
+        existing = Source.query.filter_by(
+            notebook_id=notebook_id,
+            title=title
+        ).first()
+        
+        if not existing:
+            return title
+            
+        title = f"{base_title} {counter}"
+        counter += 1
+
+
 def generate_summary(text):
     """Generate a summary of the text using OpenAI."""
     prompt = f"Please provide a concise summary of the following text:\n\n{text}"
@@ -87,7 +106,7 @@ def add_source():
             if str(data.get("is_note", "0")).lower() in ("true", "1", "yes"):
                 title = generate_unique_note_title(data.get("notebook_id"))
             else:
-                title = "Pasted Text"
+                title = generate_unique_text_title(data.get("notebook_id"))
         elif data.get('link'):
             title = data.get('link')
 

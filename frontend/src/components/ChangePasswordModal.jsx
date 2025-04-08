@@ -1,48 +1,37 @@
 import React, { useState } from 'react';
 import { Modal, Form, Button, Alert } from 'react-bootstrap';
-import { changePassword } from '../api/api';
+import { useAuth } from '../context/AuthContext';
+import { getTranslation } from '../utils/ln';
 
 export default function ChangePasswordModal({ show, onHide }) {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { changePassword } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError(null);
+    setSuccess(null);
 
-    // Validate passwords
     if (newPassword !== confirmPassword) {
-      setError('New passwords do not match');
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setError('New password must be at least 6 characters long');
+      setError(getTranslation('passwordsDoNotMatch'));
       return;
     }
 
     try {
       setLoading(true);
-      await changePassword({
-        old_password: oldPassword,
-        new_password: newPassword
-      });
-      setSuccess('Password changed successfully');
-      // Clear form
+      await changePassword(oldPassword, newPassword);
+      setSuccess(getTranslation('passwordChanged'));
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      // Close modal after 2 seconds
-      setTimeout(() => {
-        onHide();
-      }, 2000);
+      setTimeout(onHide, 2000);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to change password');
+      setError(err.response?.data?.error || getTranslation('failedToChangePassword'));
     } finally {
       setLoading(false);
     }
@@ -51,7 +40,7 @@ export default function ChangePasswordModal({ show, onHide }) {
   return (
     <Modal show={show} onHide={onHide} centered>
       <Modal.Header closeButton>
-        <Modal.Title>Change Password</Modal.Title>
+        <Modal.Title>{getTranslation('changePassword')}</Modal.Title>
       </Modal.Header>
       <Form onSubmit={handleSubmit}>
         <Modal.Body>
@@ -59,7 +48,7 @@ export default function ChangePasswordModal({ show, onHide }) {
           {success && <Alert variant="success">{success}</Alert>}
           
           <Form.Group className="mb-3">
-            <Form.Label>Current Password</Form.Label>
+            <Form.Label>{getTranslation('currentPassword')}</Form.Label>
             <Form.Control
               type="password"
               value={oldPassword}
@@ -69,7 +58,7 @@ export default function ChangePasswordModal({ show, onHide }) {
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>New Password</Form.Label>
+            <Form.Label>{getTranslation('newPassword')}</Form.Label>
             <Form.Control
               type="password"
               value={newPassword}
@@ -79,7 +68,7 @@ export default function ChangePasswordModal({ show, onHide }) {
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>Confirm New Password</Form.Label>
+            <Form.Label>{getTranslation('confirmNewPassword')}</Form.Label>
             <Form.Control
               type="password"
               value={confirmPassword}
@@ -90,14 +79,14 @@ export default function ChangePasswordModal({ show, onHide }) {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={onHide}>
-            Cancel
+            {getTranslation('cancel')}
           </Button>
           <Button 
             variant="primary" 
             type="submit"
             disabled={loading}
           >
-            {loading ? 'Changing Password...' : 'Change Password'}
+            {loading ? getTranslation('changingPassword') : getTranslation('changePasswordButton')}
           </Button>
         </Modal.Footer>
       </Form>

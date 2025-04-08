@@ -1,32 +1,34 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import Navbar from "../components/Navbar";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
+import { useAuth } from '../context/AuthContext';
+import { getTranslation } from '../utils/ln';
 
 export default function Register() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { register } = useAuth();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     if (password !== confirmPassword) {
-      return setError("Passwords do not match");
+      setError(getTranslation('passwordsDoNotMatch'));
+      return;
     }
 
     try {
       setLoading(true);
-      await register(name,email, password);
-      navigate("/home");
+      await register(name, email, password);
+      navigate('/');
     } catch (err) {
-      setError(err.message || "Failed to create an account");
+      setError(err.response?.data?.error || getTranslation('registrationFailed'));
     } finally {
       setLoading(false);
     }
@@ -40,7 +42,7 @@ export default function Register() {
           <div className="col-md-6 col-lg-4">
             <div className="card">
               <div className="card-body p-4">
-                <h2 className="text-center mb-4">Register</h2>
+                <h2 className="text-center mb-4">{getTranslation('register')}</h2>
                 {error && (
                   <div className="alert alert-danger" role="alert">
                     {error}
@@ -50,7 +52,7 @@ export default function Register() {
                   {/* name */}
                   <div className="mb-3">
                     <label htmlFor="name" className="form-label">
-                      Name
+                      {getTranslation('name')}
                     </label>
                     <input
                       type="text"
@@ -63,7 +65,7 @@ export default function Register() {
                   </div>
                   <div className="mb-3">
                     <label htmlFor="email" className="form-label">
-                      Email
+                      {getTranslation('email')}
                     </label>
                     <input
                       type="email"
@@ -76,7 +78,7 @@ export default function Register() {
                   </div>
                   <div className="mb-3">
                     <label htmlFor="password" className="form-label">
-                      Password
+                      {getTranslation('password')}
                     </label>
                     <input
                       type="password"
@@ -89,7 +91,7 @@ export default function Register() {
                   </div>
                   <div className="mb-3">
                     <label htmlFor="confirm-password" className="form-label">
-                      Confirm Password
+                      {getTranslation('confirmPassword')}
                     </label>
                     <input
                       type="password"
@@ -112,14 +114,14 @@ export default function Register() {
                         aria-hidden="true"
                       ></span>
                     ) : null}
-                    Register
+                    {getTranslation('register')}
                   </button>
                 </form>
                 <div className="text-center mt-3">
                   <p className="mb-0">
-                    Already have an account?{" "}
+                    {getTranslation('alreadyHaveAccount')}{" "}
                     <Link to="/login" className="text-decoration-none">
-                      Login
+                      {getTranslation('login')}
                     </Link>
                   </p>
                 </div>

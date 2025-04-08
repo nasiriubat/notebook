@@ -2,6 +2,7 @@ import { useState } from "react";
 import { uploadSource } from "../api/api";
 import { MdContentPaste, MdSend } from "react-icons/md";
 import { Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
+import { getTranslation } from '../utils/ln';
 
 export default function NoteComponent({ notebookId, onNoteAdded }) {
   const [noteText, setNoteText] = useState("");
@@ -17,7 +18,7 @@ export default function NoteComponent({ notebookId, onNoteAdded }) {
       setError(null);
       
       if (noteText.length > 1000) {
-        setError(`Note text cannot exceed 1000 characters. Current length: ${noteText.length}`);
+        setError(getTranslation('noteTooLong', { max: 1000, current: noteText.length }));
         return;
       }
 
@@ -38,7 +39,7 @@ export default function NoteComponent({ notebookId, onNoteAdded }) {
       }
     } catch (err) {
       console.error("Error creating note:", err);
-      const errorMessage = err.response?.data?.error || err.message || "Failed to create note";
+      const errorMessage = err.response?.data?.error || err.message || getTranslation('failedToCreateNote');
       setError(errorMessage);
     } finally {
       setUploading(false);
@@ -50,13 +51,13 @@ export default function NoteComponent({ notebookId, onNoteAdded }) {
       const text = await navigator.clipboard.readText();
       setNoteText(text);
     } catch (err) {
-      setError("Failed to paste from clipboard");
+      setError(getTranslation('failedToPaste'));
     }
   };
 
   return (
     <Card className="p-3">
-      <h5>Add Note</h5>
+      <h5>{getTranslation('addNote')}</h5>
       {error && (
         <Alert variant="danger">
           {error}
@@ -69,20 +70,20 @@ export default function NoteComponent({ notebookId, onNoteAdded }) {
           className="mb-2"
           value={noteText}
           onChange={(e) => setNoteText(e.target.value)}
-          placeholder="Enter your note here..."
+          placeholder={getTranslation('enterNote')}
           maxLength={1000}
         />
         <div className="d-flex justify-content-between align-items-center mb-2">
           <small className="text-muted">
-            {noteText.length}/1000 characters
+            {noteText.length}/1000 {getTranslation('characters')}
           </small>
         </div>
         <div className="d-flex gap-2">
           <Button variant="outline-secondary" className="flex-grow-1" onClick={handlePaste}>
-            <MdContentPaste className="me-1 react-icons" style={{ fontSize: '1rem' }} /> 
+            <MdContentPaste className="me-1 react-icons" style={{ fontSize: '1rem' }} /> {getTranslation('paste')}
           </Button>
           <Button variant="primary" className="flex-grow-1" onClick={handleAddNote} disabled={uploading}>
-             Add to sources
+            {getTranslation('addToSources')}
           </Button>
         </div>
       </div>
