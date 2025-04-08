@@ -1,4 +1,6 @@
+
 # GPT Lab Notebook
+
 
 A powerful AI-powered notebook application that allows you to interact with your documents, text, and web sources through natural language conversations.
 
