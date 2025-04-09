@@ -24,7 +24,7 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
   const [editTitle, setEditTitle] = useState("");
   const [editError, setEditError] = useState(null);
 
-  const ALLOWED_FILE_TYPES = ["pdf", "txt", "jpg", "jpeg", "png"];
+  const ALLOWED_FILE_TYPES = ["pdf", "docx", "txt", "jpg", "jpeg", "png"];
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
   const MAX_TEXT_LENGTH = 1000;
 
@@ -79,7 +79,8 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
     try {
       setFileError("");
       setCreatingSource(true);
-      
+      setError(null);
+
       // Frontend validation
       if (!validateFileType(file)) {
         setFileError(getTranslation('fileTypeNotSupported', { types: ALLOWED_FILE_TYPES.join(', ') }));
@@ -100,8 +101,24 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
       });
 
       if (response.data.error) {
-        setError(response.data.error);
+        // Check if it's a duplicate file error
+        if (response.data.error.includes("already exists")) {
+          setFileError(response.data.error);
+        } else {
+          setError(response.data.error);
+        }
         return;
+      }
+
+      // Reset file input
+      const fileInput = document.getElementById('file-upload');
+      if (fileInput) {
+        fileInput.value = '';
+      }
+
+      // Check if embeddings are being generated in the background
+      if (response.data.embedding_status === "pending") {
+        setError(getTranslation('embeddingsGenerating'));
       }
 
       // Notify parent component about the new source
@@ -111,10 +128,16 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
       setError(null);
     } catch (err) {
       console.error("Error uploading file:", err);
-      setError(err.response?.data?.message || getTranslation('failedToUploadFile'));
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || getTranslation('failedToUploadFile');
+      if (errorMessage.includes("already exists")) {
+        setFileError(errorMessage);
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setUploading(false);
       setCreatingSource(false);
+      setDragging(false);
     }
   };
 

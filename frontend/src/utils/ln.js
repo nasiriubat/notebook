@@ -102,6 +102,7 @@ export const translations = {
         failedToCopy: "Failed to copy to clipboard",
         failedToUpdate: "Failed to update source",
         failedToUploadFile: "Failed to upload file",
+        errorUploadingFile: "Error uploading file. Please try again.",
         failedToCreateTextSource: "Failed to create text source",
         failedToCreateLinkSource: "Failed to create link source",
         failedToCreateYoutubeSource: "Failed to create YouTube source",
@@ -142,6 +143,7 @@ export const translations = {
         noDate: "No date",
         invalidDate: "Invalid Date",
         loading: "Loading...",
+        embeddingsGenerating: "Embeddings are being generated in the background. This may take a few minutes.",
     },
     fi: {
         // home page
@@ -254,6 +256,7 @@ export const translations = {
         failedToCopy: "Leikepöydälle kopiointi epäonnistui",
         failedToUpdate: "Lähteen päivittäminen epäonnistui",
         failedToUploadFile: "Tiedoston lataus epäonnistui",
+        errorUploadingFile: "Virhe tiedoston lataamisessa. Yritä uudelleen.",
         failedToCreateTextSource: "Tekstilähteen luominen epäonnistui",
         failedToCreateLinkSource: "Linkkilähteen luominen epäonnistui",
         failedToCreateYoutubeSource: "YouTube-lähteen luominen epäonnistui",
@@ -284,6 +287,7 @@ export const translations = {
         noDate: "Ei päivämäärää",
         invalidDate: "Virheellinen päivämäärä",
         loading: "Ladataan...",
+        embeddingsGenerating: "Upotuksia luodaan taustalla. Tämä voi kestää muutaman minuutin.",
     }
 };
 

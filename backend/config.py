@@ -15,3 +15,4 @@ class Config:
     SMTP_EMAIL = os.getenv('SMTP_EMAIL')
     SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
     OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+    RAG_TYPE = os.getenv('RAG_TYPE', 'faiss')  # Can be 'faiss' or 'vector' (for ChromaDB)

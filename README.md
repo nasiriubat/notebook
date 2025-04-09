@@ -1,4 +1,3 @@
-
 # GPT Lab Notebook
 
 
@@ -192,3 +191,57 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 For support, please open an issue in the GitHub repository or contact the maintainers.
+
+## Vector Database Options
+
+The application supports three different vector storage options for the RAG (Retrieval Augmented Generation) system:
+
+### FAISS (Default)
+
+FAISS is an efficient similarity search library developed by Facebook AI Research. It's fast and efficient for in-memory vector searches.
+
+### ChromaDB
+
+ChromaDB is a vector database that provides more advanced features like metadata filtering, persistence, and cloud deployment options.
+
+Our ChromaDB implementation includes several advanced RAG features:
+
+- **Semantic Chunking**: Intelligently splits documents at natural boundaries like paragraphs and sentences
+- **Embedding Caching**: Reduces API costs by caching embeddings for reuse
+- **Smart Query Processing**: Removes unnecessary words from queries to focus on key terms
+- **Chunk Merging**: Combines adjacent chunks in search results for better context
+- **Enhanced Text Cleaning**: Preserves important formatting while removing noise
+- **Quality Thresholds**: Only returns high-quality matches above a similarity threshold
+
+### Simple Vector Store
+
+A lightweight alternative using sentence-transformers and numpy for vector similarity search. This option:
+- Requires no compilation or complex dependencies
+- Uses the efficient all-MiniLM-L6-v2 model for embeddings
+- Provides good performance for smaller datasets
+- Stores embeddings in simple JSON files
+- Includes basic text preprocessing and chunking
+
+### Switching Between Vector Stores
+
+You can easily switch between FAISS, ChromaDB, and the Simple Vector Store by changing the `RAG_TYPE` environment variable in your backend `.env` file:
+
+```
+# For FAISS
+RAG_TYPE=faiss
+
+# For ChromaDB (with advanced RAG features)
+RAG_TYPE=vector
+
+# For Simple Vector Store (no compilation required)
+RAG_TYPE=simple
+```
+
+The application will automatically use the specified vector store for all embedding storage and search operations. This allows you to:
+
+1. Start with the Simple Vector Store for easy setup and testing
+2. Switch to FAISS for better performance with larger datasets
+3. Use ChromaDB for more complex scenarios or production environments
+4. Test different systems to compare performance and results
+
+Note: When switching between vector stores, previously stored embeddings won't be transferred automatically. You'll need to recreate your sources in the new system.

@@ -41,19 +41,53 @@ def normalize_text(text):
 
 # get embedding from openai text-ada model
 def get_embedding(text):
-    # return text
-    response = client.embeddings.create(input=text, model="text-embedding-3-small")
+    # Import here to avoid circular imports
+    from app import app
+    
+    # Use the same embedding model as in the rest of the app
+    if app.config["RAG_TYPE"].lower() == 'faiss':
+        # Use the same embedding model as in embed_and_search.py
+        response = client.embeddings.create(input=text, model="text-embedding-ada-002")
+    else:
+        # Use the same embedding model as in chroma_embed.py
+        response = client.embeddings.create(input=text, model="text-embedding-3-small")
+        
     return response.data[0].embedding
 
 
 # Function to extract text from PDF
 def extract_text_from_pdf(pdf_path):
+    """Extract text from a PDF file with improved error handling and text processing."""
     try:
         text = ""
         with pdfplumber.open(pdf_path) as pdf:
-            for page in pdf.pages:
-                text += page.extract_text() + "\n"
-        return normalize_text(text)
+            # Get total pages for logging
+            total_pages = len(pdf.pages)
+            print(f"Processing PDF with {total_pages} pages")
+            
+            for page_num, page in enumerate(pdf.pages, 1):
+                try:
+                    # Extract text from the page
+                    page_text = page.extract_text()
+                    if page_text:
+                        # Clean up the extracted text
+                        page_text = re.sub(r'\s+', ' ', page_text)  # Replace multiple spaces with single space
+                        page_text = re.sub(r'\n\s*\n', '\n\n', page_text)  # Normalize line breaks
+                        text += page_text + "\n\n"  # Add double line break between pages
+                    else:
+                        print(f"Warning: No text extracted from page {page_num}")
+                except Exception as page_error:
+                    print(f"Error extracting text from page {page_num}: {str(page_error)}")
+                    continue
+            
+            if not text.strip():
+                return "No text content could be extracted from the PDF."
+                
+            # Normalize the extracted text
+            normalized_text = normalize_text(text)
+            print(f"Successfully extracted text from PDF ({len(normalized_text)} characters)")
+            return normalized_text
+            
     except Exception as e:
         print(f"Error extracting text from PDF: {str(e)}")
         return f"Error extracting text from PDF: {str(e)}"
@@ -120,29 +154,72 @@ def extract_text_from_youtube(youtube_url):
 
 # Function to process input based on type
 def process_input(input_value):
+    """Process input based on type and return a dictionary with text, embedding, and file extension."""
     text = ""
     file_extension = "plainText"
-    if os.path.isfile(input_value):
-        file_extension = os.path.splitext(input_value)[1].lower()
-        if file_extension == ".pdf":
-            text = extract_text_from_pdf(input_value)
-        elif file_extension == ".txt":
-            text = extract_text_from_txt(input_value)
-        elif file_extension == ".docx":
-            text = extract_text_from_docx(input_value)
-        elif file_extension in [".jpg", ".jpeg", ".png"]:
-            text = extract_text_from_image(input_value)
-        else:
-            return "Unsupported file format."
+    
+    try:
+        if os.path.isfile(input_value):
+            file_extension = os.path.splitext(input_value)[1].lower()[1:]  # Remove the dot
+            print(f"Processing file with extension: {file_extension}")
+            
+            if file_extension == "pdf":
+                text = extract_text_from_pdf(input_value)
+                if text.startswith("Error extracting text from PDF"):
+                    print(f"Error extracting text from PDF: {text}")
+                    return {"text": text, "embedding": None, "file_extension": file_extension}
+            elif file_extension == "txt":
+                text = extract_text_from_txt(input_value)
+                if text.startswith("Error reading TXT file"):
+                    print(f"Error reading TXT file: {text}")
+                    return {"text": text, "embedding": None, "file_extension": file_extension}
+            elif file_extension == "docx":
+                text = extract_text_from_docx(input_value)
+                if text.startswith("Error extracting text from DOCX file"):
+                    print(f"Error extracting text from DOCX file: {text}")
+                    return {"text": text, "embedding": None, "file_extension": file_extension}
+            elif file_extension in ["jpg", "jpeg", "png"]:
+                text = extract_text_from_image(input_value)
+                if text.startswith("Error extracting text from image"):
+                    print(f"Error extracting text from image: {text}")
+                    return {"text": text, "embedding": None, "file_extension": file_extension}
+            else:
+                error_msg = f"Unsupported file format: {file_extension}"
+                print(error_msg)
+                return {"text": error_msg, "embedding": None, "file_extension": file_extension}
 
-    elif input_value.startswith("http"):  # If input is a URL
-        if "youtube.com" in input_value or "youtu.be" in input_value:
-            text = extract_text_from_youtube(input_value)
-        else:
-            text = extract_text_from_webpage(input_value)
+        elif input_value.startswith("http"):  # If input is a URL
+            file_extension = "url"
+            if "youtube.com" in input_value or "youtu.be" in input_value:
+                text = extract_text_from_youtube(input_value)
+                if text.startswith("Error extracting subtitles from YouTube"):
+                    print(f"Error extracting YouTube subtitles: {text}")
+                    return {"text": text, "embedding": None, "file_extension": file_extension}
+            else:
+                text = extract_text_from_webpage(input_value)
+                if text.startswith("Error"):
+                    print(f"Error extracting webpage content: {text}")
+                    return {"text": text, "embedding": None, "file_extension": file_extension}
+        else:  # Plain text input
+            text = normalize_text(input_value)
 
-    else:  # Plain text input
-        text = normalize_text(input_value)
+        if not text or text.isspace():
+            error_msg = "No text content could be extracted."
+            print(error_msg)
+            return {"text": error_msg, "embedding": None, "file_extension": file_extension}
 
-    # return and array with two key text and embedding
-    return {"text": text, "embedding": get_embedding(text), "file_extension": file_extension}
+        # Generate embedding for the text
+        try:
+            embedding = get_embedding(text)
+        except Exception as e:
+            print(f"Error generating embedding: {str(e)}")
+            return {"text": f"Error generating embedding: {str(e)}", "embedding": None, "file_extension": file_extension}
+        
+        return {
+            "text": text,
+            "embedding": embedding,
+            "file_extension": file_extension
+        }
+    except Exception as e:
+        print(f"Error in process_input: {str(e)}")
+        return {"text": f"Error processing input: {str(e)}", "embedding": None, "file_extension": file_extension}
