@@ -133,7 +133,11 @@ export default function NotebookPage() {
                 />
               </Col>
               <Col lg={3}>
-                <NoteComponent notebookId={id} onNoteAdded={handleSourceUpdate} />
+                <NoteComponent 
+                  notebookId={id} 
+                  onNoteAdded={handleSourceUpdate} 
+                  selectedSources={selectedSources}
+                />
               </Col>
             </Row>
           </div>
@@ -202,7 +206,11 @@ export default function NotebookPage() {
                   />
                 </Tab.Pane>
                 <Tab.Pane eventKey="notes" className="h-100">
-                  <NoteComponent notebookId={id} onNoteAdded={handleSourceUpdate} />
+                  <NoteComponent 
+                    notebookId={id} 
+                    onNoteAdded={handleSourceUpdate} 
+                    selectedSources={selectedSources}
+                  />
                 </Tab.Pane>
               </Tab.Content>
             </Tab.Container>

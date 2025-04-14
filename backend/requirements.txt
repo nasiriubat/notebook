@@ -20,3 +20,7 @@ flask-cors
 numpy
 tiktoken
 faiss-cpu
+elevenlabs
+google-cloud-texttospeech
+pydub
+gTTS
