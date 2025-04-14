@@ -21,8 +21,7 @@ class OpenAIProvider(TTSProvider):
     def __init__(self):
         self.client = OpenAI()
         self.available_voices = [
-            "alloy", "ash", "ballad", "coral", "echo", 
-            "fable", "onyx", "nova", "sage", "shimmer"
+            "alloy", "echo", "fable", "onyx", "nova", "shimmer"
         ]
         
     def get_voices(self):
@@ -32,7 +31,7 @@ class OpenAIProvider(TTSProvider):
         try:
             # Set default voice if none provided
             if not voice_id or voice_id not in self.available_voices:
-                voice_id = "coral"  # Default to coral voice
+                voice_id = "nova"  # Default to nova voice which is more natural
             
             # Create a temporary file
             temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
@@ -40,19 +39,22 @@ class OpenAIProvider(TTSProvider):
             temp_file.close()
             
             # Generate speech using OpenAI TTS
-            with self.client.audio.speech.with_streaming_response.create(
-                model="gpt-4o-mini-tts",
+            response = self.client.audio.speech.create(
+                model="tts-1",
                 voice=voice_id,
-                input=text,
-                instructions="Speak in a natural and engaging tone."
-            ) as response:
-                response.stream_to_file(temp_path)
+                input=text
+            )
+            
+            # Write the audio content to the file
+            with open(temp_path, 'wb') as f:
+                f.write(response.content)
                 
             return temp_path
                 
         except Exception as e:
             print(f"Error in OpenAI TTS: {str(e)}")
-            raise
+            # Fall back to GTTS if OpenAI fails
+            return GTTSProvider().text_to_speech(text)
 
 class GoogleProvider(TTSProvider):
     def __init__(self):
