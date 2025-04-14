@@ -1,6 +1,7 @@
 export const translations = {
     en: {
         // Authentication
+        sources: "Sources",
         login: "Login",
         register: "Register",
         email: "Email",
@@ -138,7 +139,6 @@ export const translations = {
         cancel: "Cancel",
         moreOptions: "More options",
         created: "Created",
-        sources: "sources",
         noDate: "No date",
         invalidDate: "Invalid Date",
         loading: "Loading...",
@@ -292,6 +292,9 @@ export const getCurrentLanguage = () => {
     return localStorage.getItem('language') || 'en';
 };
 
+const capitalize = (str) =>
+    str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
 // Set language in localStorage
 export const setLanguage = (lang) => {
     localStorage.setItem('language', lang);
@@ -300,7 +303,7 @@ export const setLanguage = (lang) => {
 // Get translation for current language
 export const getTranslation = (key, params = {}) => {
     const currentLang = getCurrentLanguage();
-    let translation = translations[currentLang][key] || translations['en'][key] || key;
+    let translation = translations[currentLang][key] || translations['en'][key] ||  capitalize(key);
     
     // Replace parameters in translation string
     Object.entries(params).forEach(([param, value]) => {

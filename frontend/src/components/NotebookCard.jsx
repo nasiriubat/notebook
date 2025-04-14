@@ -246,7 +246,7 @@ export default function NotebookCard({ notebook, onDelete, onUpdate, viewMode = 
         </span>
         <span className="notebook-sources">
           <MdSource size={16} className="me-1" />
-          {notebook.sources?.length || 0} {getTranslation('sources')}
+          {notebook.sourceCount || 0} {getTranslation('sources')}
         </span>
       </div>
     </div>

@@ -79,7 +79,7 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
     try {
       setFileError("");
       setCreatingSource(true);
-      
+
       // Frontend validation
       if (!validateFileType(file)) {
         setFileError(getTranslation('fileTypeNotSupported', { types: ALLOWED_FILE_TYPES.join(', ') }));
@@ -92,7 +92,7 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
       }
 
       setUploading(true);
-      
+
       // Pass the file directly to uploadSource
       const response = await uploadSource({
         file,
@@ -154,9 +154,9 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
       }
     } catch (err) {
       console.error("Error creating text source:", err);
-      const errorMessage = err.response?.data?.message || 
-                          err.response?.data?.error || 
-                          getTranslation('failedToCreateTextSource');
+      const errorMessage = err.response?.data?.message ||
+        err.response?.data?.error ||
+        getTranslation('failedToCreateTextSource');
       setError(errorMessage);
     } finally {
       setCreatingSource(false);
@@ -193,9 +193,9 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
       }
     } catch (err) {
       console.error("Error creating link source:", err);
-      const errorMessage = err.response?.data?.message || 
-                          err.response?.data?.error || 
-                          getTranslation('failedToCreateLinkSource');
+      const errorMessage = err.response?.data?.message ||
+        err.response?.data?.error ||
+        getTranslation('failedToCreateLinkSource');
       setError(errorMessage);
     } finally {
       setCreatingSource(false);
@@ -324,10 +324,10 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
           {error}
         </Alert>
       )}
-      
+
       {/* Input Type Selection */}
       <div className="source-input-area">
-        <Form.Select 
+        <Form.Select
           className="mb-3"
           value={selectedInputType}
           onChange={handleInputTypeChange}
@@ -341,9 +341,8 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
         {selectedInputType === "file" && (
           <>
             <div
-              className={`upload-area p-3 text-center mb-2 ${
-                dragging ? "border border-primary" : "border border-dashed"
-              }`}
+              className={`upload-area p-3 text-center mb-2 ${dragging ? "border border-primary" : "border border-dashed"
+                }`}
               onDragOver={(e) => {
                 e.preventDefault();
                 setDragging(true);
@@ -360,7 +359,7 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
                 disabled={uploading}
                 accept={ALLOWED_FILE_TYPES.map(type => `.${type}`).join(',')}
               />
-              <div 
+              <div
                 onClick={() => document.getElementById('file-upload').click()}
                 className="mb-0"
               >
@@ -375,7 +374,7 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
             <Alert variant="warning" className="mb-2 py-1 text-center ">
               <small className="d-block mb-1">
                 <i className="bi bi-exclamation-triangle me-1"></i>
-                {ALLOWED_FILE_TYPES.join(', ')} 
+                {ALLOWED_FILE_TYPES.join(', ')}
                 {getTranslation('maxFileSize')}
               </small>
             </Alert>
@@ -454,6 +453,14 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
       </div>
 
       <div className="sources-list">
+        {creatingSource && (
+          <ListGroup.Item className="d-flex align-items-center">
+            <div className="d-flex align-items-center">
+              <Spinner animation="border" size="sm" className="me-2" />
+              <span>{getTranslation('creatingSource')}</span>
+            </div>
+          </ListGroup.Item>
+        )}
         {sources.length > 0 ? (
           <ListGroup>
             {sources.map((src) => (
@@ -489,14 +496,7 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
                 </div>
               </ListGroup.Item>
             ))}
-            {creatingSource && (
-              <ListGroup.Item className="d-flex align-items-center">
-                <div className="d-flex align-items-center">
-                  <Spinner animation="border" size="sm" className="me-2" />
-                  <span>{getTranslation('creatingSource')}</span>
-                </div>
-              </ListGroup.Item>
-            )}
+
           </ListGroup>
         ) : (
           <div className="text-center py-3">
