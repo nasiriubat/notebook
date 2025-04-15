@@ -266,10 +266,10 @@ def generate_audio_from_script(script):
     name_to_voice = {
         'Host': 'nova',  # Professional, clear voice for host
         'Alex': 'echo',  # Distinct voice for each speaker
-        'Sam': 'shimmer',
+        'Emma': 'shimmer',
         'Jordan': 'onyx',
-        'Taylor': 'alloy',
-        'Casey': 'fable'
+        'Megan': 'alloy',
+        'Robert': 'fable'
     }
     
     for line in script.split('\n'):
