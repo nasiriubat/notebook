@@ -9,7 +9,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# Configure CORS with specific settings
+# Configure CORS with specific setting
 CORS(app, resources={
     r"/*": {
         "origins": ["*"],
