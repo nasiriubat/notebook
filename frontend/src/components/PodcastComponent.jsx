@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Form, Alert, Spinner } from 'react-bootstrap';
-import { FaMicrophone, FaStop } from 'react-icons/fa';
+import { Button, Form, Alert, Spinner, Card, Row, Col } from 'react-bootstrap';
+import { FaMicrophone, FaStop, FaHeadphones, FaDownload, FaVolumeUp } from 'react-icons/fa';
 import JSZip from 'jszip';
 
 const PodcastComponent = ({ notebookId, selectedSources }) => {
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
+    
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [audioContext, setAudioContext] = useState(null);
     const [audioBuffer, setAudioBuffer] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentSource, setCurrentSource] = useState(null);
+    const [audioUrl, setAudioUrl] = useState(null);
+    const [notebookName, setNotebookName] = useState(null);
 
     // Initialize audio context on component mount
     useEffect(() => {
@@ -66,8 +67,7 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
                 },
                 body: JSON.stringify({
                     sources: selectedSources,
-                    title,
-                    description
+                    
                 })
             });
 
@@ -124,11 +124,71 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
             });
 
             setAudioBuffer(concatenatedBuffer);
+            
+            // Create a blob URL for the concatenated audio
+            const audioData = concatenatedBuffer.getChannelData(0);
+            const wavBlob = audioBufferToWav(concatenatedBuffer);
+            const url = URL.createObjectURL(wavBlob);
+            setAudioUrl(url);
+            
+            // Set notebook name for the download
+            setNotebookName(notebookName || 'podcast');
+            
             setLoading(false);
         } catch (err) {
             console.error('Error generating podcast:', err);
             setError(err.message);
             setLoading(false);
+        }
+    };
+
+    // Helper function to convert AudioBuffer to WAV format
+    const audioBufferToWav = (buffer) => {
+        const numChannels = buffer.numberOfChannels;
+        const sampleRate = buffer.sampleRate;
+        const format = 1; // PCM
+        const bitDepth = 16;
+        
+        const bytesPerSample = bitDepth / 8;
+        const blockAlign = numChannels * bytesPerSample;
+        
+        const wav = new ArrayBuffer(44 + buffer.length * blockAlign);
+        const view = new DataView(wav);
+        
+        // Write WAV header
+        writeString(view, 0, 'RIFF');
+        view.setUint32(4, 36 + buffer.length * blockAlign, true);
+        writeString(view, 8, 'WAVE');
+        writeString(view, 12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, format, true);
+        view.setUint16(22, numChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * blockAlign, true);
+        view.setUint16(32, blockAlign, true);
+        view.setUint16(34, bitDepth, true);
+        writeString(view, 36, 'data');
+        view.setUint32(40, buffer.length * blockAlign, true);
+        
+        // Write audio data
+        const offset = 44;
+        let index = 0;
+        
+        for (let i = 0; i < buffer.length; i++) {
+            for (let channel = 0; channel < numChannels; channel++) {
+                const sample = Math.max(-1, Math.min(1, buffer.getChannelData(channel)[i]));
+                const value = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+                view.setInt16(offset + index, value, true);
+                index += 2;
+            }
+        }
+        
+        return new Blob([wav], { type: 'audio/wav' });
+    };
+
+    const writeString = (view, offset, string) => {
+        for (let i = 0; i < string.length; i++) {
+            view.setUint8(offset + i, string.charCodeAt(i));
         }
     };
 
@@ -170,69 +230,96 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
         }
     };
 
+    const handleDownload = () => {
+        if (!audioUrl) return;
+        
+        try {
+            // Create a temporary link element
+            const link = document.createElement('a');
+            link.href = audioUrl;
+            link.download = `${notebookName || 'podcast'}.wav`;
+            
+            // Append to body, click, and remove
+            document.body.appendChild(link);
+            link.click();
+            
+            // Clean up after a short delay to ensure the download starts
+            setTimeout(() => {
+                document.body.removeChild(link);
+            }, 100);
+            
+            console.log('Download initiated for:', `${notebookName || 'podcast'}.wav`);
+        } catch (err) {
+            console.error('Error downloading audio:', err);
+            setError('Failed to download audio file. Please try again.');
+        }
+    };
+
     return (
-        <div className="podcast-component p-3 border rounded mb-3">
-            <h4>Generate Podcast</h4>
-            <Form>
-                <Form.Group className="mb-3">
-                    <Form.Label>Title</Form.Label>
-                    <Form.Control
-                        type="text"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="Enter podcast title"
-                    />
-                </Form.Group>
-                <Form.Group className="mb-3">
-                    <Form.Label>Description</Form.Label>
-                    <Form.Control
-                        as="textarea"
-                        rows={3}
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        placeholder="Enter podcast description"
-                    />
-                </Form.Group>
-                {error && <Alert variant="danger">{error}</Alert>}
-                <div className="d-flex gap-2">
-                    <Button
-                        variant="primary"
-                        onClick={handleGenerate}
-                        disabled={loading || !selectedSources?.length}
-                    >
-                        {loading ? (
-                            <>
-                                <Spinner animation="border" size="sm" className="me-2" />
-                                Generating...
-                            </>
-                        ) : (
-                            <>
-                                <FaMicrophone className="me-2" />
-                                Generate Podcast
-                            </>
-                        )}
-                    </Button>
-                    {audioBuffer && (
+        <Card className="podcast-component mb-4 shadow-sm">
+            
+            <Card.Body>
+                <Form>
+                    {error && <Alert variant="danger">{error}</Alert>}
+                    
+                    <div className="d-grid gap-3">
                         <Button
-                            variant={isPlaying ? "danger" : "success"}
-                            onClick={isPlaying ? stopAudio : playAudio}
+                            variant="primary"
+                            size="lg"
+                            onClick={handleGenerate}
+                            disabled={loading || !selectedSources?.length}
+                            className="py-2"
                         >
-                            {isPlaying ? (
+                            {loading ? (
                                 <>
-                                    <FaStop className="me-2" />
-                                    Stop
+                                    <Spinner animation="border" size="sm" className="me-2" />
+                                    Generating...
                                 </>
                             ) : (
                                 <>
                                     <FaMicrophone className="me-2" />
-                                    Play
+                                    Generate Podcast
                                 </>
                             )}
                         </Button>
-                    )}
-                </div>
-            </Form>
-        </div>
+                        
+                        {audioBuffer && (
+                            <Row className="g-2">
+                                <Col xs={6}>
+                                    <Button
+                                        variant={isPlaying ? "danger" : "success"}
+                                        onClick={isPlaying ? stopAudio : playAudio}
+                                        className="w-100 py-2"
+                                    >
+                                        {isPlaying ? (
+                                            <>
+                                                <FaStop className="me-2" />
+                                                Stop
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FaVolumeUp className="me-2" />
+                                                Play
+                                            </>
+                                        )}
+                                    </Button>
+                                </Col>
+                                <Col xs={6}>
+                                    <Button
+                                        variant="outline-primary"
+                                        onClick={handleDownload}
+                                        className="w-100 py-2"
+                                    >
+                                        <FaDownload className="me-2" />
+                                        Download
+                                    </Button>
+                                </Col>
+                            </Row>
+                        )}
+                    </div>
+                </Form>
+            </Card.Body>
+        </Card>
     );
 };
 
