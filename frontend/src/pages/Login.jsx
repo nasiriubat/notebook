@@ -31,7 +31,9 @@ export default function Login() {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.error || getTranslation('invalidCredentials'));
+      console.error("Login error:", err);
+      // The error message is already extracted in the login function
+      setError(err.message || getTranslation('invalidCredentials'));
     } finally {
       setLoading(false);
     }

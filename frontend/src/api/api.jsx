@@ -1,8 +1,11 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL : "http://128.214.253.62:5000";
-// const API_BASE_URL = "http://127.0.0.1:5000";
-// const API_BASE_URL = "http://128.214.253.62:5000";
+// Get API URL from environment variables with fallback
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
+
+if (!import.meta.env.VITE_API_URL) {
+  console.warn("VITE_API_URL is not set in environment variables. Using default URL:", API_BASE_URL);
+}
 
 const api = axios.create({
   baseURL: API_BASE_URL,

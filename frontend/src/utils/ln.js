@@ -25,6 +25,9 @@ export const translations = {
         logout: "Logout",
         passwordChanged: "Password changed successfully",
         failedToChangePassword: "Failed to change password",
+        registrationFailed: "Registration failed",
+        passwordsDoNotMatch: "Passwords do not match",
+        emailAlreadyExists: "Email already exists",
 
         // Notebook
         createNotebook: "Create Notebook",
@@ -154,6 +157,9 @@ export const translations = {
         createNotebookPlaceholder: "Syötä muistikirjan nimi",
         switchToListView: "Vaihda luettelonäkymään",
         // Authentication
+        emailAlreadyExists: "Sähköposti on jo käytössä",
+        registrationFailed: "Rekisteröinti epäonnistui",
+        passwordsDoNotMatch: "Salasanat eivät täsmää",
         login: "Kirjaudu",
         register: "Rekisteröidy",
         email: "Sähköposti",
