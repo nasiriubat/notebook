@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Form, Alert, Spinner, Card, Row, Col } from 'react-bootstrap';
-import { FaMicrophone, FaStop, FaHeadphones, FaDownload, FaVolumeUp } from 'react-icons/fa';
+import { Button, Form, Alert, Spinner, Card, Row, Col, Dropdown, FormGroup, FormLabel, FormControl } from 'react-bootstrap';
+import { FaMicrophone, FaStop, FaHeadphones, FaDownload, FaVolumeUp, FaUsers, FaUserTie } from 'react-icons/fa';
 import JSZip from 'jszip';
 
 const PodcastComponent = ({ notebookId, selectedSources }) => {
@@ -13,6 +13,11 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
     const [currentSource, setCurrentSource] = useState(null);
     const [audioUrl, setAudioUrl] = useState(null);
     const [notebookName, setNotebookName] = useState(null);
+    
+    // New state variables for podcast options
+    const [podcastMode, setPodcastMode] = useState('normal');
+    const [personCount, setPersonCount] = useState(2);
+    const [hasHost, setHasHost] = useState(false);
 
     // Initialize audio context on component mount
     useEffect(() => {
@@ -67,7 +72,9 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
                 },
                 body: JSON.stringify({
                     sources: selectedSources,
-                    
+                    podcastMode: podcastMode,
+                    personCount: personCount,
+                    hasHost: hasHost
                 })
             });
 
@@ -257,12 +264,54 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
 
     return (
         <Card className="podcast-component mb-4 shadow-sm">
-            
             <Card.Body>
+                <h4 className="mb-3">Generate Podcast</h4>
                 <Form>
                     {error && <Alert variant="danger">{error}</Alert>}
                     
                     <div className="d-grid gap-3">
+                        <Row className="g-3 mb-3">
+                            <Col md={4}>
+                                <FormGroup>
+                                    <FormLabel>Mode</FormLabel>
+                                    <FormControl 
+                                        as="select" 
+                                        value={podcastMode}
+                                        onChange={(e) => setPodcastMode(e.target.value)}
+                                    >
+                                        <option value="normal">Normal</option>
+                                        <option value="debate">Debate</option>
+                                    </FormControl>
+                                </FormGroup>
+                            </Col>
+                            <Col md={4}>
+                                <FormGroup>
+                                    <FormLabel>People</FormLabel>
+                                    <FormControl 
+                                        type="number" 
+                                        min="2" 
+                                        max="5" 
+                                        value={personCount}
+                                        onChange={(e) => setPersonCount(parseInt(e.target.value))}
+                                    />
+                                </FormGroup>
+                            </Col>
+                            <Col md={4}>
+                                <FormGroup>
+                                    <FormLabel>Host</FormLabel>
+                                    <div className="d-flex align-items-center mt-2">
+                                        <Form.Check 
+                                            type="switch"
+                                            id="host-switch"
+                                            checked={hasHost}
+                                            onChange={(e) => setHasHost(e.target.checked)}
+                                            label={hasHost ? "Yes" : "No"}
+                                        />
+                                    </div>
+                                </FormGroup>
+                            </Col>
+                        </Row>
+                        
                         <Button
                             variant="primary"
                             size="lg"
@@ -277,8 +326,7 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
                                 </>
                             ) : (
                                 <>
-                                    <FaMicrophone className="me-2" />
-                                    Generate Podcast
+                                    Generate 
                                 </>
                             )}
                         </Button>
@@ -293,12 +341,10 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
                                     >
                                         {isPlaying ? (
                                             <>
-                                                <FaStop className="me-2" />
                                                 Stop
                                             </>
                                         ) : (
                                             <>
-                                                <FaVolumeUp className="me-2" />
                                                 Play
                                             </>
                                         )}
@@ -310,7 +356,6 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
                                         onClick={handleDownload}
                                         className="w-100 py-2"
                                     >
-                                        <FaDownload className="me-2" />
                                         Download
                                     </Button>
                                 </Col>

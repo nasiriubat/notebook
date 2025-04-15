@@ -39,6 +39,11 @@ def generate_podcast(notebook_id):
         title = data.get('title', 'Untitled Podcast')
         description = data.get('description', '')
         
+        # Get podcast configuration
+        podcast_mode = data.get('podcastMode', 'normal')
+        person_count = data.get('personCount', 2)
+        has_host = data.get('hasHost', False)
+        
         if not sources:
             logger.error("No sources provided in request")
             return jsonify({"error": "No sources provided"}), 400
@@ -46,10 +51,11 @@ def generate_podcast(notebook_id):
         logger.info(f"Generating podcast with {len(sources)} sources")
         logger.info(f"Title: {title}")
         logger.info(f"Description: {description}")
+        logger.info(f"Mode: {podcast_mode}, Person Count: {person_count}, Has Host: {has_host}")
         
         # Generate podcast script using OpenAI
         try:
-            script = generate_script(title, description, sources)
+            script = generate_script(title, description, sources, podcast_mode, person_count, has_host)
             logger.info("Successfully generated script")
         except Exception as e:
             logger.error(f"Error generating script: {str(e)}")
@@ -117,7 +123,7 @@ def generate_podcast(notebook_id):
         logger.error(f"Unexpected error in generate_podcast: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-def generate_script(title, description, sources):
+def generate_script(title, description, sources, podcast_mode='normal', person_count=2, has_host=False):
     """Generate a podcast script using OpenAI."""
     try:
         # Prepare the prompt
@@ -126,7 +132,65 @@ def generate_script(title, description, sources):
             for i, source in enumerate(sources)
         ])
         
-        prompt = f"""Create a natural, conversational podcast script for a two-person discussion based on the following information:
+        # Create natural names for speakers
+        natural_names = {
+            1: ["Alex"],
+            2: ["Alex", "Sam"],
+            3: ["Alex", "Sam", "Jordan"],
+            4: ["Alex", "Sam", "Jordan", "Taylor"],
+            5: ["Alex", "Sam", "Jordan", "Taylor", "Casey"]
+        }
+        
+        # Get names based on person count
+        names = natural_names.get(person_count, ["Alex", "Sam", "Jordan", "Taylor", "Casey"][:person_count])
+        
+        # Add host if needed
+        speakers = []
+        if has_host:
+            speakers.append("Host")
+        
+        # Add participants with natural names
+        speakers.extend(names)
+        
+        speakers_text = ", ".join(speakers)
+        
+        # Create mode-specific instructions
+        mode_instructions = ""
+        if podcast_mode == "debate":
+            mode_instructions = """
+The podcast should be structured as a debate with:
+1. Each speaker taking opposing or different viewpoints on the topics
+2. Speakers respectfully challenging each other's perspectives
+3. A balanced discussion with each speaker getting equal time
+4. Clear arguments supported by the source material
+5. A conclusion that summarizes the different viewpoints
+"""
+        else:
+            mode_instructions = """
+The podcast should be structured as a normal discussion with:
+1. Each speaker contributing their unique perspective
+2. Natural flow between topics
+3. Speakers building on each other's points
+4. A collaborative exploration of the source material
+5. A conclusion that ties together the main points
+"""
+        
+        # Create host-specific instructions
+        host_instructions = ""
+        if has_host:
+            host_instructions = """
+The Host should:
+1. Introduce the topic and speakers
+2. Guide the conversation with engaging questions
+3. Summarize key points between speakers
+4. Ensure all speakers get a chance to contribute
+5. Provide transitions between topics
+6. Conclude the podcast with a summary
+7. Use phrases like "That's an interesting point, [Speaker]. What do you think about that, [Other Speaker]?"
+8. Keep the conversation flowing naturally
+"""
+        
+        prompt = f"""Create a natural, conversational podcast script based on the following information:
 
 Title: {title}
 Description: {description}
@@ -134,36 +198,45 @@ Description: {description}
 Sources:
 {sources_text}
 
+Podcast Configuration:
+- Mode: {podcast_mode}
+- Number of Speakers: {person_count}
+- Has Host: {has_host}
+- Speakers: {speakers_text}
+
 The script should:
-1. Be a natural, flowing conversation between two hosts (Alex and Sam)
-2. Alex should have a more formal, professional tone
-3. Sam should have a more casual, friendly tone
-4. Include natural pauses, filler words, and conversational elements
-5. Avoid reading directly from the sources - paraphrase and discuss naturally
-6. Include an introduction and conclusion
-7. Flow smoothly between topics
-8. Be engaging and informative
-9. Sound like a real podcast conversation, not a script being read
-10. Format as a back-and-forth conversation with each host speaking in complete paragraphs
-11. Be at least 10 paragraphs long (5 exchanges between the hosts)
-12. Cover all the key points from the sources
+1. Be a natural, flowing conversation between {person_count} speakers {f"and a host" if has_host else ""}
+2. Each speaker should have a distinct personality and speaking style
+3. Include natural pauses, filler words, and conversational elements
+4. Avoid reading directly from the sources - paraphrase and discuss naturally
+5. Include an introduction and conclusion
+6. Flow smoothly between topics
+7. Be engaging and informative
+8. Sound like a real podcast conversation, not a script being read
+9. Format as a back-and-forth conversation with each speaker speaking in complete paragraphs
+10. Be at least 10 paragraphs long
+11. Cover all the key points from the sources
+{mode_instructions}
+{host_instructions}
 
 Format each paragraph with the speaker indicator followed by their dialogue. For example:
 
-Alex: Hey everyone, welcome to our podcast! Today we're talking about [topic]. I'm really excited to dive into this with you, Sam.
+Host: Welcome to our podcast! Today we're talking about [topic]. I'm joined by {", ".join(names)}. Let's start with you, {names[0]}. What are your thoughts on this topic?
 
-Sam: Thanks for having me, Alex! I've been reading up on this topic and there's so much interesting stuff to discuss. I think our listeners are going to really enjoy this episode.
+{names[0]}: Thanks for having me! I've been researching this topic and I think [opinion]. From what I understand, [explanation].
 
-Alex: Absolutely! Let's start by giving our listeners a quick overview of what we'll be covering today. From what I understand, [brief summary].
+Host: That's an interesting perspective. {names[1]}, what do you think about that?
 
-Please create a natural conversation that covers all the key points from the sources, but in a conversational way. Make sure to include at least 10 paragraphs (5 exchanges between the hosts)."""
+{names[1]}: I see {names[0]}'s point, but I think there's another angle to consider. [different perspective].
+
+Please create a natural conversation that covers all the key points from the sources, but in a conversational way. Make sure to include at least 10 paragraphs."""
 
         # Call OpenAI API
         client = openai.OpenAI(api_key=Config.OPENAI_API_KEY)
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a professional podcast script writer specializing in natural, conversational dialogue between two hosts. Each host speaks in complete paragraphs, and the conversation flows naturally back and forth. Create scripts that are at least 10 paragraphs long."},
+                {"role": "system", "content": "You are a professional podcast script writer specializing in natural, conversational dialogue between multiple speakers. Each speaker speaks in complete paragraphs, and the conversation flows naturally back and forth. Create scripts that are at least 10 paragraphs long."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.8,
@@ -173,7 +246,7 @@ Please create a natural conversation that covers all the key points from the sou
         script = response.choices[0].message.content
         
         # Log the script for debugging
-        logger.info(f"Generated script with {script.count('Alex:') + script.count('Sam:')} paragraphs")
+        logger.info(f"Generated script with natural names")
         
         return script
         
@@ -181,13 +254,23 @@ Please create a natural conversation that covers all the key points from the sou
         raise Exception(f"Failed to generate script: {str(e)}")
 
 def generate_audio_from_script(script):
-    """Convert the script to audio using TTS with two different voices."""
+    """Convert the script to audio using TTS with different voices for each speaker."""
     tts_provider = get_tts_provider()
     
     # Split the script into paragraphs by speaker
     paragraphs = []
     current_speaker = None
     current_paragraph = []
+    
+    # Define natural names and their corresponding voices
+    name_to_voice = {
+        'Host': 'nova',  # Professional, clear voice for host
+        'Alex': 'echo',  # Distinct voice for each speaker
+        'Sam': 'shimmer',
+        'Jordan': 'onyx',
+        'Taylor': 'alloy',
+        'Casey': 'fable'
+    }
     
     for line in script.split('\n'):
         line = line.strip()
@@ -198,20 +281,44 @@ def generate_audio_from_script(script):
                 current_paragraph = []
             continue
             
-        if line.startswith('Alex:'):
+        # Check for different speaker patterns
+        if line.startswith('Host:'):
             # If we were already building a paragraph, save it
+            if current_paragraph:
+                paragraphs.append((current_speaker, ' '.join(current_paragraph)))
+                current_paragraph = []
+            current_speaker = 'Host'
+            current_paragraph.append(line[5:].strip())
+        elif line.startswith('Alex:'):
             if current_paragraph:
                 paragraphs.append((current_speaker, ' '.join(current_paragraph)))
                 current_paragraph = []
             current_speaker = 'Alex'
             current_paragraph.append(line[5:].strip())
         elif line.startswith('Sam:'):
-            # If we were already building a paragraph, save it
             if current_paragraph:
                 paragraphs.append((current_speaker, ' '.join(current_paragraph)))
                 current_paragraph = []
             current_speaker = 'Sam'
             current_paragraph.append(line[4:].strip())
+        elif line.startswith('Jordan:'):
+            if current_paragraph:
+                paragraphs.append((current_speaker, ' '.join(current_paragraph)))
+                current_paragraph = []
+            current_speaker = 'Jordan'
+            current_paragraph.append(line[7:].strip())
+        elif line.startswith('Taylor:'):
+            if current_paragraph:
+                paragraphs.append((current_speaker, ' '.join(current_paragraph)))
+                current_paragraph = []
+            current_speaker = 'Taylor'
+            current_paragraph.append(line[7:].strip())
+        elif line.startswith('Casey:'):
+            if current_paragraph:
+                paragraphs.append((current_speaker, ' '.join(current_paragraph)))
+                current_paragraph = []
+            current_speaker = 'Casey'
+            current_paragraph.append(line[6:].strip())
         else:
             # Continue the current paragraph
             current_paragraph.append(line)
@@ -231,10 +338,10 @@ def generate_audio_from_script(script):
             continue
             
         # Choose voice based on speaker
-        voice_id = "nova" if speaker == "Alex" else "echo"  # Use different voices for each speaker
+        voice_id = name_to_voice.get(speaker, 'nova')  # Default to nova if speaker not found
         
         # Log for debugging
-        logger.info(f"Generating audio for paragraph {i+1}/{len(paragraphs)} with voice {voice_id}")
+        logger.info(f"Generating audio for paragraph {i+1}/{len(paragraphs)} with voice {voice_id} for {speaker}")
         
         # Generate audio for this paragraph
         audio_path = tts_provider.text_to_speech(text, voice_id=voice_id)
