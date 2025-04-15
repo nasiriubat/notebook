@@ -12,7 +12,7 @@ app.config.from_object(Config)
 # Configure CORS with specific settings
 CORS(app, resources={
     r"/*": {
-        "origins": ["http://localhost:5173", "http://127.0.0.1:5173"],
+        "origins": ["*"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
         "expose_headers": ["Content-Type", "Authorization", "X-Podcast-Duration", "X-Podcast-Title", "X-Podcast-Description", "X-Podcast-Source-Count"],
