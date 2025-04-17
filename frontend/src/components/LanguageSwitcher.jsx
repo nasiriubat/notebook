@@ -58,20 +58,20 @@ const LanguageSwitcher = ({ className = '' }) => {
                     border-radius: 0.25rem;
                 }
                 .language-toggle input[type="radio"]:checked + label {
-                    color: var(--bs-gray-800);
-                    background: var(--active);
+                    color: var(--bs-primary);
+                        background: var(--surface);
                     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
                 }
                 @media (prefers-color-scheme: dark) {
                     .language-toggle {
-                        background: var(--secondary);
+                        background: var(--border);
                     }
                     .language-toggle label {
                         color: var(--text);
                     }
                     .language-toggle input[type="radio"]:checked + label {
                         color: var(--bs-primary);
-                        background: var(--active);
+                        background: var(--surface);
                         box-shadow: 0 1px 3px rgba(0,0,0,0.2);
                     }
                 }
