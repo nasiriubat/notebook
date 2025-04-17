@@ -316,7 +316,7 @@ export default function NotebookPage() {
         /* Dark mode adjustments */
         @media (prefers-color-scheme: dark) {
           .modern-tabs {
-            background: transparent;
+            background: var(--background);
             border-color: rgba(255, 255, 255, 0.1);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
           }
@@ -337,12 +337,12 @@ export default function NotebookPage() {
 
           /* Enhanced dark mode for source tab */
           .card {
-            background: transparent !important;
+            background: var(--background) !important;
             border-color: rgba(255, 255, 255, 0.1) !important;
           }
 
           .source-input-area {
-            background: var(--secondary) !important;
+            background: var(--hover) !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
             border-radius: 0.5rem !important;
             padding: 1rem !important;
@@ -352,8 +352,8 @@ export default function NotebookPage() {
           }
 
           .source-input-area:hover {
-            border-color: rgba(255, 255, 255, 0.2) !important;
-            background: transparent !important;
+            border-color: var(--border) !important;
+            background: var(--hover) !important;
           }
 
           .source-input-area .form-select,
@@ -365,9 +365,9 @@ export default function NotebookPage() {
 
           .source-input-area .form-select:focus,
           .source-input-area .form-control:focus {
-            background-color: rgba(33, 37, 41, 0.9) !important;
+            background-color: var(--surface) !important;
             border-color: var(--bs-primary) !important;
-            color: var(--bs-gray-300) !important;
+            color: var(--text) !important;
           }
 
           .source-input-area .text-muted {
@@ -385,9 +385,9 @@ export default function NotebookPage() {
           }
 
           .source-input-area .alert {
-            background-color: rgba(33, 37, 41, 0.8) !important;
+            background-color: var(--background) !important;
             border-color: rgba(255, 255, 255, 0.1) !important;
-            color: var(--bs-gray-300) !important;
+            color: var(--text) !important;
           }
 
           .source-input-area .alert-warning {
@@ -425,12 +425,12 @@ export default function NotebookPage() {
 
           /* Dropdown menu */
           .dropdown-menu {
-            background-color: rgba(33, 37, 41, 0.95) !important;
+            background-color: var(--surface) !important;
             border-color: rgba(255, 255, 255, 0.1) !important;
           }
 
           .dropdown-item {
-            color: var(--bs-gray-300) !important;
+            color: var(--text) !important;
           }
 
           .dropdown-item:hover {

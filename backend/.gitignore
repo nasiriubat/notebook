@@ -6,3 +6,4 @@ instance/
 *.faiss
 *.pyc
 dataembedding/*
+

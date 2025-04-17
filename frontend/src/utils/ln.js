@@ -286,7 +286,7 @@ export const translations = {
         cancel: "Peruuta",
         moreOptions: "Lisää vaihtoehtoja",
         created: "Luotu",
-        sources: "lähdettä",
+        
         noDate: "Ei päivämäärää",
         invalidDate: "Virheellinen päivämäärä",
         loading: "Ladataan...",
