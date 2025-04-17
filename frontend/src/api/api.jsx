@@ -1,8 +1,11 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL : "http://128.214.253.62:5000";
-// const API_BASE_URL = "http://127.0.0.1:5000";
-// const API_BASE_URL = "http://128.214.253.62:5000";
+// Get API URL from environment variables with fallback
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:5000";
+
+if (!import.meta.env.VITE_API_URL) {
+  console.warn("VITE_API_URL is not set in environment variables. Using default URL:", API_BASE_URL);
+}
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -138,3 +141,37 @@ export const updateNote = (id, data) => api.put(`/note/${id}`, data);
 export const sendChatMessage = (data) => api.post("/chat", data);
 export const getChatMessages = (notebookId) => api.get(`/chat/${notebookId}`);
 export const deleteChatMessages = (notebookId) => api.delete(`/chat/${notebookId}`);
+
+// Podcast endpoints
+export const generatePodcast = (data) => {
+  const { notebook_id, source_ids, podcastMode, personCount, hasHost } = data;
+  
+  // Create a new axios instance for this request with the correct content type
+  const podcastApi = axios.create({
+    baseURL: API_BASE_URL,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem("token")}`
+    },
+    responseType: 'blob' // Important for handling binary data
+  });
+
+  // Add the same response interceptor to handle authentication errors
+  podcastApi.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+      }
+      return Promise.reject(error);
+    }
+  );
+  
+  return podcastApi.post(`/api/podcast/generate/${notebook_id}`, {
+    sources: source_ids,
+    podcastMode,
+    personCount,
+    hasHost
+  });
+};

@@ -40,7 +40,7 @@ const LanguageSwitcher = ({ className = '' }) => {
                 }
                 .language-toggle {
                     display: flex;
-                    background: var(--bs-gray-200);
+                    background: var(--secondary);
                     padding: 0.25rem;
                     border-radius: 0.5rem;
                     position: relative;
@@ -52,7 +52,7 @@ const LanguageSwitcher = ({ className = '' }) => {
                     padding: 0.25rem 0.75rem;
                     font-size: 0.875rem;
                     font-weight: 500;
-                    color: var(--bs-gray-600);
+                    color: var(--text);
                     cursor: pointer;
                     transition: all 0.2s ease;
                     border-radius: 0.25rem;

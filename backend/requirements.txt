@@ -3,7 +3,6 @@ Flask-SQLAlchemy
 Flask-JWT-Extended
 Werkzeug
 python-dotenv
-faiss-cpu
 torch
 transformers
 dotenv
@@ -19,4 +18,9 @@ openai
 flask-cors
 numpy
 tiktoken
-faiss-cpu
+sentence-transformers
+scikit-learn
+elevenlabs
+google-cloud-texttospeech
+pydub
+gTTS

@@ -133,7 +133,11 @@ export default function NotebookPage() {
                 />
               </Col>
               <Col lg={3}>
-                <NoteComponent notebookId={id} onNoteAdded={handleSourceUpdate} />
+                <NoteComponent 
+                  notebookId={id} 
+                  onNoteAdded={handleSourceUpdate} 
+                  selectedSources={selectedSources}
+                />
               </Col>
             </Row>
           </div>
@@ -202,7 +206,11 @@ export default function NotebookPage() {
                   />
                 </Tab.Pane>
                 <Tab.Pane eventKey="notes" className="h-100">
-                  <NoteComponent notebookId={id} onNoteAdded={handleSourceUpdate} />
+                  <NoteComponent 
+                    notebookId={id} 
+                    onNoteAdded={handleSourceUpdate} 
+                    selectedSources={selectedSources}
+                  />
                 </Tab.Pane>
               </Tab.Content>
             </Tab.Container>
@@ -212,7 +220,7 @@ export default function NotebookPage() {
       
       <style>{`
         .footer {
-          background-color: var(--bs-body-bg);
+          background-color: var(--secondary);
           border-top: 1px solid var(--bs-border-color);
         }
         .tab-content {
@@ -226,13 +234,12 @@ export default function NotebookPage() {
         .modern-tabs {
           display: flex;
           justify-content: space-around;
-          background: var(--bs-body-bg);
+          background: var(--secondary);
           border: 1px solid var(--bs-border-color);
           padding: 0.5rem;
           border-radius: 1rem;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
           margin-bottom: 1rem;
-          backdrop-filter: blur(10px);
         }
 
         .modern-tab {

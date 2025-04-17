@@ -1,92 +1,141 @@
-import { useState } from "react";
-import { uploadSource } from "../api/api";
-import { MdContentPaste, MdSend } from "react-icons/md";
-import { Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Card, Button, Form, Spinner } from 'react-bootstrap';
+import { FaPlus, FaEdit, FaTrash, FaSave, FaTimes } from 'react-icons/fa';
 import { getTranslation } from '../utils/ln';
+import PodcastComponent from './PodcastComponent';
+import { uploadSource } from '../api/api';
 
-export default function NoteComponent({ notebookId, onNoteAdded }) {
-  const [noteText, setNoteText] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [uploading, setUploading] = useState(false);
+const NoteComponent = ({ notebookId, selectedSources, notebookName, onNoteAdded }) => {
+    const [notes, setNotes] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [editingNote, setEditingNote] = useState(null);
+    const [newNote, setNewNote] = useState({ title: '', content: '' });
+    const [isAddingNote, setIsAddingNote] = useState(false);
+    const [uploading, setUploading] = useState(false);
 
-  const handleAddNote = async () => {
-    if (!noteText.trim() || uploading) return;
 
-    try {
-      setUploading(true);
-      setError(null);
-      
-      if (noteText.length > 1000) {
-        setError(getTranslation('noteTooLong', { max: 1000, current: noteText.length }));
-        return;
-      }
+ 
 
-      const formData = new FormData();
-      formData.append("text", noteText);
-      formData.append("notebook_id", notebookId);
-      formData.append("is_note", "1");
+    const handleAddNote = async () => {
+        if (!newNote.content.trim() || uploading) return;
 
-      const response = await uploadSource(formData);
-      if (response.data.error) {
-        setError(response.data.error);
-        return;
-      }
+        try {
+            setUploading(true);
+            setError(null);
+            
+            if (newNote.content.length > 10000) {
+                setError(getTranslation('noteTooLong', { max: 10000, current: newNote.content.length }));
+                return;
+            }
 
-      setNoteText("");
-      if (onNoteAdded) {
-        onNoteAdded();
-      }
-    } catch (err) {
-      console.error("Error creating note:", err);
-      const errorMessage = err.response?.data?.error || err.message || getTranslation('failedToCreateNote');
-      setError(errorMessage);
-    } finally {
-      setUploading(false);
-    }
-  };
+            const response = await uploadSource({
+                text: newNote.content,
+                notebook_id: notebookId,
+                is_note: true,
+                title: newNote.title || undefined
+            });
 
-  const handlePaste = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      setNoteText(text);
-    } catch (err) {
-      setError(getTranslation('failedToPaste'));
-    }
-  };
+            if (response.data.error) {
+                setError(response.data.error);
+                return;
+            }
 
-  return (
-    <Card className="p-3">
-      <h5>{getTranslation('addNote')}</h5>
-      {error && (
-        <Alert variant="danger">
-          {error}
-        </Alert>
-      )}
-      <div className="mb-3">
-        <Form.Control
-          as="textarea"
-          rows={4}
-          className="mb-2"
-          value={noteText}
-          onChange={(e) => setNoteText(e.target.value)}
-          placeholder={getTranslation('enterNote')}
-          maxLength={1000}
-        />
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <small className="text-muted">
-            {noteText.length}/1000 {getTranslation('characters')}
-          </small>
-        </div>
-        <div className="d-flex gap-2">
-          <Button variant="outline-secondary" className="flex-grow-1" onClick={handlePaste}>
-            <MdContentPaste className="me-1 react-icons" style={{ fontSize: '1rem' }} /> {getTranslation('paste')}
-          </Button>
-          <Button variant="primary" className="flex-grow-1" onClick={handleAddNote} disabled={uploading}>
-            {getTranslation('addToSources')}
-          </Button>
-        </div>
-      </div>
-    </Card>
-  );
-}
+            setNewNote({ title: '', content: '' });
+            setIsAddingNote(false);
+            
+            // Call the onNoteAdded callback to refresh the sources list
+            if (onNoteAdded) {
+                onNoteAdded();
+            }
+        } catch (err) {
+            console.error("Error creating note:", err);
+            const errorMessage = err.response?.data?.error || err.message || getTranslation('failedToCreateNote');
+            setError(errorMessage);
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    
+
+
+    return (
+        <Container fluid className="note-component">
+            <Row>
+                <Col>
+                    <div className="d-flex justify-content-between align-items-center mb-4">
+                        <h2>{getTranslation('notes')}</h2>
+                        <Button
+                            variant="primary"
+                            onClick={() => setIsAddingNote(true)}
+                        >
+                            <FaPlus className="me-2" />
+                            {getTranslation('addNote')}
+                        </Button>
+                    </div>
+
+                    
+                    {/* Add Note Modal */}
+                    {isAddingNote && (
+                        <Card className="add-note-card">
+                            <Card.Body>
+                                <Form>
+                                    
+                                    <Form.Group className="mb-3">
+                                        <Form.Label>{getTranslation('noteContent')}</Form.Label>
+                                        <Form.Control
+                                            as="textarea"
+                                            rows={3}
+                                            value={newNote.content}
+                                            onChange={(e) => setNewNote({
+                                                ...newNote,
+                                                content: e.target.value
+                                            })}
+                                        />
+                                    </Form.Group>
+                                    <div className="d-flex gap-2">
+                                        <Button
+                                            variant="primary"
+                                            onClick={handleAddNote}
+                                            disabled={uploading}
+                                        >
+                                            {uploading ? (
+                                                <>
+                                                    <Spinner animation="border" size="sm" className="me-2" />
+                                                    {getTranslation('saving')}
+                                                </>
+                                            ) : (
+                                                getTranslation('save')
+                                            )}
+                                        </Button>
+                                        <Button
+                                            variant="secondary"
+                                            onClick={() => {
+                                                setIsAddingNote(false);
+                                                setNewNote({ title: '', content: '' });
+                                            }}
+                                        >
+                                            {getTranslation('cancel')}
+                                        </Button>
+                                    </div>
+                                </Form>
+                            </Card.Body>
+                        </Card>
+                    )}
+
+                    {/* Podcast Generation Section */}
+                    <div className="mt-3">
+                        <PodcastComponent 
+                            selectedSources={selectedSources} 
+                            notebookName={notebookName}
+                            notebookId={notebookId}
+                        />
+                    </div>
+                </Col>
+            </Row>
+        </Container>
+    );
+};
+
+export default NoteComponent;

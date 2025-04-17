@@ -1,6 +1,7 @@
 export const translations = {
     en: {
         // Authentication
+        sources: "Sources",
         login: "Login",
         register: "Register",
         email: "Email",
@@ -24,6 +25,9 @@ export const translations = {
         logout: "Logout",
         passwordChanged: "Password changed successfully",
         failedToChangePassword: "Failed to change password",
+        registrationFailed: "Registration failed",
+        passwordsDoNotMatch: "Passwords do not match",
+        emailAlreadyExists: "Email already exists",
 
         // Notebook
         createNotebook: "Create Notebook",
@@ -153,6 +157,9 @@ export const translations = {
         createNotebookPlaceholder: "Syötä muistikirjan nimi",
         switchToListView: "Vaihda luettelonäkymään",
         // Authentication
+        emailAlreadyExists: "Sähköposti on jo käytössä",
+        registrationFailed: "Rekisteröinti epäonnistui",
+        passwordsDoNotMatch: "Salasanat eivät täsmää",
         login: "Kirjaudu",
         register: "Rekisteröidy",
         email: "Sähköposti",
@@ -291,6 +298,9 @@ export const getCurrentLanguage = () => {
     return localStorage.getItem('language') || 'en';
 };
 
+const capitalize = (str) =>
+    str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
 // Set language in localStorage
 export const setLanguage = (lang) => {
     localStorage.setItem('language', lang);
@@ -299,7 +309,7 @@ export const setLanguage = (lang) => {
 // Get translation for current language
 export const getTranslation = (key, params = {}) => {
     const currentLang = getCurrentLanguage();
-    let translation = translations[currentLang][key] || translations['en'][key] || key;
+    let translation = translations[currentLang][key] || translations['en'][key] ||  capitalize(key);
     
     // Replace parameters in translation string
     Object.entries(params).forEach(([param, value]) => {
