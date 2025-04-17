@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button, Form, Alert, Spinner, Card, Row, Col, Dropdown, FormGroup, FormLabel, FormControl } from 'react-bootstrap';
 import { FaMicrophone, FaStop, FaHeadphones, FaDownload, FaVolumeUp, FaUsers, FaUserTie } from 'react-icons/fa';
 import JSZip from 'jszip';
+import { generatePodcast } from '../api/api';
+import './PodcastComponent.css';
 
 const PodcastComponent = ({ notebookId, selectedSources }) => {
     
@@ -18,6 +20,22 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
     const [podcastMode, setPodcastMode] = useState('normal');
     const [personCount, setPersonCount] = useState(2);
     const [hasHost, setHasHost] = useState(false);
+    
+    // Animation state
+    const [activeSpeaker, setActiveSpeaker] = useState(0);
+    const [speakerTimings, setSpeakerTimings] = useState([]);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const animationIntervalRef = useRef(null);
+    
+    // Speaker colors
+    const speakerColors = [
+        '#4CAF50', // Green
+        '#2196F3', // Blue
+        '#F44336', // Red
+        '#FFC107', // Amber
+        '#9C27B0'  // Purple
+    ];
 
     // Initialize audio context on component mount
     useEffect(() => {
@@ -51,100 +69,56 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
             setError('Failed to initialize audio playback. Please try a different browser.');
         }
     }, [audioContext]);
+    
+    // Rotate active speaker when playing
+    useEffect(() => {
+        let interval;
+        if (isPlaying) {
+            interval = setInterval(() => {
+                setActiveSpeaker(prev => (prev + 1) % (hasHost ? personCount + 1 : personCount));
+            }, 2000);
+        } else {
+            setActiveSpeaker(0);
+        }
+        
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [isPlaying, personCount, hasHost]);
 
     const handleGenerate = async () => {
-        if (!selectedSources || selectedSources.length === 0) {
+        if (selectedSources.length === 0) {
             setError('Please select at least one source');
             return;
         }
 
         setLoading(true);
         setError(null);
+        setAudioBuffer(null);
+        setAudioUrl(null);
 
         try {
-            // Use the environment variable for the API URL
-            const apiUrl = import.meta.env.VITE_API_URL || '';
-            const response = await fetch(`${apiUrl}/api/podcast/generate/${notebookId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
-                    sources: selectedSources,
-                    podcastMode: podcastMode,
-                    personCount: personCount,
-                    hasHost: hasHost
-                })
+            const response = await generatePodcast({
+                notebook_id: notebookId,
+                source_ids: selectedSources
             });
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || 'Failed to generate podcast');
-            }
-
-            // Get the zip file
-            const zipBlob = await response.blob();
-            const zip = new JSZip();
-            const zipContents = await zip.loadAsync(zipBlob);
-
-            // Ensure audio context is initialized
-            if (!audioContext) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                if (AudioContext) {
-                    const ctx = new AudioContext();
-                    setAudioContext(ctx);
-                } else {
-                    throw new Error('Your browser does not support the Web Audio API');
-                }
-            }
-
-            // Load all audio segments
-            const segmentPromises = [];
-            for (let i = 0; i < Object.keys(zipContents.files).length; i++) {
-                const segmentFile = zipContents.file(`segment_${i}.mp3`);
-                if (segmentFile) {
-                    const arrayBuffer = await segmentFile.async('arraybuffer');
-                    segmentPromises.push(audioContext.decodeAudioData(arrayBuffer));
-                }
-            }
-
-            // Wait for all segments to be decoded
-            const audioBuffers = await Promise.all(segmentPromises);
-
-            // Concatenate all buffers
-            const totalLength = audioBuffers.reduce((acc, buffer) => acc + buffer.length, 0);
-            const concatenatedBuffer = audioContext.createBuffer(
-                audioBuffers[0].numberOfChannels,
-                totalLength,
-                audioBuffers[0].sampleRate
-            );
-
-            let offset = 0;
-            audioBuffers.forEach(buffer => {
-                for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
-                    const concatenatedData = concatenatedBuffer.getChannelData(channel);
-                    const bufferData = buffer.getChannelData(channel);
-                    concatenatedData.set(bufferData, offset);
-                }
-                offset += buffer.length;
-            });
-
-            setAudioBuffer(concatenatedBuffer);
-            
-            // Create a blob URL for the concatenated audio
-            const audioData = concatenatedBuffer.getChannelData(0);
-            const wavBlob = audioBufferToWav(concatenatedBuffer);
-            const url = URL.createObjectURL(wavBlob);
+            // Create a blob URL from the audio data
+            const audioBlob = new Blob([response.data], { type: 'audio/wav' });
+            const url = URL.createObjectURL(audioBlob);
             setAudioUrl(url);
-            
-            // Set notebook name for the download
             setNotebookName(notebookName || 'podcast');
-            
-            setLoading(false);
+
+            // Initialize audio context and decode the audio data
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const arrayBuffer = await audioBlob.arrayBuffer();
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+            setAudioBuffer(audioBuffer);
+
         } catch (err) {
             console.error('Error generating podcast:', err);
-            setError(err.message);
+            setError(err.message || 'Failed to generate podcast');
+        } finally {
             setLoading(false);
         }
     };
@@ -219,13 +193,56 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffer;
         source.connect(audioContext.destination);
+        
+        // Create an analyzer to detect which speaker is active
+        const analyzer = audioContext.createAnalyser();
+        analyzer.fftSize = 2048;
+        source.connect(analyzer);
+        analyzer.connect(audioContext.destination);
+        
+        // Start playback
         source.start(0);
         setCurrentSource(source);
         setIsPlaying(true);
-
+        
+        // Set duration
+        setDuration(audioBuffer.duration);
+        
+        // Start animation interval
+        animationIntervalRef.current = setInterval(() => {
+            setCurrentTime(prevTime => {
+                const newTime = prevTime + 0.1; // Update every 100ms
+                if (newTime >= audioBuffer.duration) {
+                    clearInterval(animationIntervalRef.current);
+                    return 0;
+                }
+                return newTime;
+            });
+        }, 100);
+        
+        // Update active speaker based on time
+        const updateActiveSpeaker = () => {
+            if (!isPlaying) return;
+            
+            // Calculate which speaker should be active based on current time
+            // This is a simple rotation - in a real app, you'd parse the audio metadata
+            const totalSpeakers = hasHost ? personCount + 1 : personCount;
+            const timePerSpeaker = audioBuffer.duration / totalSpeakers;
+            const currentSpeakerIndex = Math.floor(currentTime / timePerSpeaker);
+            
+            setActiveSpeaker(currentSpeakerIndex % totalSpeakers);
+        };
+        
+        // Update speaker every 500ms
+        const speakerInterval = setInterval(updateActiveSpeaker, 500);
+        
         source.onended = () => {
             setIsPlaying(false);
             setCurrentSource(null);
+            setCurrentTime(0);
+            setActiveSpeaker(0);
+            clearInterval(animationIntervalRef.current);
+            clearInterval(speakerInterval);
         };
     };
 
@@ -234,6 +251,11 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
             currentSource.stop();
             setCurrentSource(null);
             setIsPlaying(false);
+            setCurrentTime(0);
+            setActiveSpeaker(0);
+            if (animationIntervalRef.current) {
+                clearInterval(animationIntervalRef.current);
+            }
         }
     };
 
@@ -262,10 +284,54 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
         }
     };
 
+    // Render speaker avatars
+    const renderSpeakerAvatars = () => {
+        const totalSpeakers = hasHost ? personCount + 1 : personCount;
+        const speakers = [];
+        
+        for (let i = 0; i < totalSpeakers; i++) {
+            const isActive = i === activeSpeaker && isPlaying;
+            const isHost = i === 0 && hasHost;
+            
+            // Calculate animation delay based on speaker index
+            const animationDelay = `${i * 0.1}s`;
+            
+            speakers.push(
+                <div 
+                    key={i} 
+                    className={`speaker-avatar ${isActive ? 'active' : ''}`}
+                    style={{ 
+                        backgroundColor: speakerColors[i % speakerColors.length],
+                        transitionDelay: animationDelay
+                    }}
+                >
+                    <div className="speaker-label">
+                        {isHost ? 'Host' : `Speaker ${i + (hasHost ? 0 : 1)}`}
+                    </div>
+                    <div className="sound-wave-container">
+                        <div 
+                            className={`sound-wave-bar ${isActive ? 'animate' : ''}`}
+                            style={{ animationDelay: `${i * 0.1}s` }}
+                        ></div>
+                        <div 
+                            className={`sound-wave-bar ${isActive ? 'animate' : ''}`}
+                            style={{ animationDelay: `${i * 0.1 + 0.2}s` }}
+                        ></div>
+                        <div 
+                            className={`sound-wave-bar ${isActive ? 'animate' : ''}`}
+                            style={{ animationDelay: `${i * 0.1 + 0.4}s` }}
+                        ></div>
+                    </div>
+                </div>
+            );
+        }
+        
+        return speakers;
+    };
+
     return (
         <Card className="podcast-component mb-4 shadow-sm">
             <Card.Body>
-                <h4 className="mb-3">Generate Podcast</h4>
                 <Form>
                     {error && <Alert variant="danger">{error}</Alert>}
                     
@@ -326,10 +392,24 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
                                 </>
                             ) : (
                                 <>
-                                    Generate 
+                                    <FaMicrophone className="me-2" />
+                                    Generate Podcast
                                 </>
                             )}
                         </Button>
+                        
+                        {/* Animation Container - Always visible */}
+                        <div className="animation-container mt-3 p-3 rounded">
+                            {!audioBuffer ? (
+                                <div className="text-center text-muted">
+                                    <p>Generate a podcast to see the animation</p>
+                                </div>
+                            ) : (
+                                <div className="speakers-container">
+                                    {renderSpeakerAvatars()}
+                                </div>
+                            )}
+                        </div>
                         
                         {audioBuffer && (
                             <Row className="g-2">
@@ -341,10 +421,12 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
                                     >
                                         {isPlaying ? (
                                             <>
+                                                <FaStop className="me-2" />
                                                 Stop
                                             </>
                                         ) : (
                                             <>
+                                                <FaVolumeUp className="me-2" />
                                                 Play
                                             </>
                                         )}
@@ -356,6 +438,7 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
                                         onClick={handleDownload}
                                         className="w-100 py-2"
                                     >
+                                        <FaDownload className="me-2" />
                                         Download
                                     </Button>
                                 </Col>
