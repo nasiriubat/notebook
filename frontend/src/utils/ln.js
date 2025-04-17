@@ -138,7 +138,6 @@ export const translations = {
         cancel: "Cancel",
         moreOptions: "More options",
         created: "Created",
-        sources: "sources",
         noDate: "No date",
         invalidDate: "Invalid Date",
         loading: "Loading...",
@@ -280,7 +279,7 @@ export const translations = {
         cancel: "Peruuta",
         moreOptions: "Lisää vaihtoehtoja",
         created: "Luotu",
-        sources: "lähdettä",
+        
         noDate: "Ei päivämäärää",
         invalidDate: "Virheellinen päivämäärä",
         loading: "Ladataan...",
