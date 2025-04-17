@@ -337,7 +337,7 @@ export default function NotebookPage() {
 
           /* Enhanced dark mode for source tab */
           .card {
-            background: var(--secondary) !important;
+            background: transparent !important;
             border-color: rgba(255, 255, 255, 0.1) !important;
           }
 
@@ -358,9 +358,9 @@ export default function NotebookPage() {
 
           .source-input-area .form-select,
           .source-input-area .form-control {
-            background-color: rgba(33, 37, 41, 0.8) !important;
+            background-color: var(--background) !important;
             border-color: rgba(255, 255, 255, 0.1) !important;
-            color: var(--bs-gray-300) !important;
+            color: var(--text) !important;
           }
 
           .source-input-area .form-select:focus,

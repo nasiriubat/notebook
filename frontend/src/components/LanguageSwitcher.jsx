@@ -40,7 +40,7 @@ const LanguageSwitcher = ({ className = '' }) => {
                 }
                 .language-toggle {
                     display: flex;
-                    background: var(--bs-gray-200);
+                    background: var(--secondary);
                     padding: 0.25rem;
                     border-radius: 0.5rem;
                     position: relative;
@@ -52,26 +52,26 @@ const LanguageSwitcher = ({ className = '' }) => {
                     padding: 0.25rem 0.75rem;
                     font-size: 0.875rem;
                     font-weight: 500;
-                    color: var(--bs-gray-600);
+                    color: var(--text);
                     cursor: pointer;
                     transition: all 0.2s ease;
                     border-radius: 0.25rem;
                 }
                 .language-toggle input[type="radio"]:checked + label {
-                    color: var(--bs-primary);
-                    background: white;
+                    color: var(--bs-gray-800);
+                    background: var(--active);
                     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
                 }
                 @media (prefers-color-scheme: dark) {
                     .language-toggle {
-                        background: var(--bs-gray-700);
+                        background: var(--secondary);
                     }
                     .language-toggle label {
-                        color: var(--bs-gray-300);
+                        color: var(--text);
                     }
                     .language-toggle input[type="radio"]:checked + label {
                         color: var(--bs-primary);
-                        background: var(--bs-gray-800);
+                        background: var(--active);
                         box-shadow: 0 1px 3px rgba(0,0,0,0.2);
                     }
                 }

@@ -24,8 +24,8 @@ const NoteComponent = ({ notebookId, selectedSources, notebookName, onNoteAdded 
             setUploading(true);
             setError(null);
             
-            if (newNote.content.length > 1000) {
-                setError(getTranslation('noteTooLong', { max: 1000, current: newNote.content.length }));
+            if (newNote.content.length > 10000) {
+                setError(getTranslation('noteTooLong', { max: 10000, current: newNote.content.length }));
                 return;
             }
 

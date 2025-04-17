@@ -25,8 +25,8 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
   const [editError, setEditError] = useState(null);
 
   const ALLOWED_FILE_TYPES = ["pdf", "txt", "jpg", "jpeg", "png"];
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
-  const MAX_TEXT_LENGTH = 1000;
+  const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB in bytes
+  const MAX_TEXT_LENGTH = 10000;
 
   useEffect(() => {
     // Only notify parent if selectedSources has changed and is not empty
