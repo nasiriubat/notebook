@@ -10,16 +10,19 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # Configure CORS with specific settings
-# CORS(app, resources={
-#     r"/*": {
-#         "origins": ["http://localhost:5173"],
-#         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-#         "allow_headers": ["Content-Type", "Authorization"]
-#     }
-# })
+CORS(app, resources={
+    r"/*": {
+        "origins": ["*"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "expose_headers": ["Content-Type", "Authorization", "X-Podcast-Duration", "X-Podcast-Title", "X-Podcast-Description", "X-Podcast-Source-Count"],
+        "supports_credentials": True,
+        "max_age": 600
+    }
+})
 
 # Enable CORS for all routes and origins (for development purposes only)
-CORS(app);
+# CORS(app);
 
 
 db = SQLAlchemy(app)
@@ -37,6 +40,7 @@ from app.controllers.auth_controller import register, login, change_password, fo
 from app.controllers.notebook_controller import create_notebook, get_notebooks, update_notebook, delete_notebook, get_notebook
 from app.controllers.source_controller import add_source, get_sources, update_source, delete_source, get_source
 from app.controllers.chat_controller import send_chat_message, get_chat_messages, delete_chat_message
+from app.controllers.podcast_controller import generate_podcast
 
 
 # Auth routes
@@ -66,3 +70,6 @@ app.add_url_rule('/sources/<int:source_id>', 'delete_source', delete_source, met
 app.add_url_rule('/chat', 'send_chat_message', send_chat_message, methods=['POST'])
 app.add_url_rule('/chat/<int:notebook_id>', 'get_chat_messages', get_chat_messages, methods=['GET'])
 app.add_url_rule('/chat/<int:notebook_id>', 'delete_chat_message', delete_chat_message, methods=['DELETE'])
+
+# Podcast routes
+app.add_url_rule('/api/podcast/generate/<int:notebook_id>', 'generate_podcast', generate_podcast, methods=['POST', 'OPTIONS'])

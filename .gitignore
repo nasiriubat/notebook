@@ -56,4 +56,9 @@ wheels/
 # Virtual Environment
 venv/
 ENV/
-.env 
+.env
+
+# Audio files
+backend/audio/
+*.mp3
+*.wav 

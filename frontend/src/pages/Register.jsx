@@ -17,6 +17,7 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     if (password !== confirmPassword) {
       setError(getTranslation('passwordsDoNotMatch'));
@@ -24,11 +25,12 @@ export default function Register() {
     }
 
     try {
-      setLoading(true);
       await register(name, email, password);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.error || getTranslation('registrationFailed'));
+      console.error("Registration error:", err);
+      // The error message is already extracted in the register function
+      setError(err.message || getTranslation('registrationFailed'));
     } finally {
       setLoading(false);
     }

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { sendChatMessage, uploadSource, deleteChatMessages, getChatMessages } from "../api/api";
-import { FaPaperPlane, FaCopy, FaPlus, FaRedo, FaTrash } from "react-icons/fa";
+import { FaPaperPlane, FaCopy, FaPlus, FaRedo, FaTrash, FaVolumeUp, FaStop } from "react-icons/fa";
 import { Card, Form, Button, Alert, Spinner, Modal } from 'react-bootstrap';
 import { getCurrentLanguage, getTranslation } from '../utils/ln';
+import useSpeech from '../hooks/useSpeech';
 import './ChatComponent.css';
 
 const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
@@ -14,6 +15,7 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const messagesEndRef = useRef(null);
+  const { speak, stop, isSpeaking } = useSpeech();
 
   // Load messages when component mounts or notebook changes
   useEffect(() => {
@@ -329,6 +331,15 @@ const ChatComponent = ({ notebookId, selectedSources, onSourceAdded }) => {
                             title={getTranslation('regenerateResponse')}
                           >
                             <FaRedo />
+                          </Button>
+                          <Button
+                            variant="outline-secondary"
+                            size="sm"
+                            className="action-button"
+                            onClick={() => isSpeaking ? stop() : speak(message.content)}
+                            title={isSpeaking ? getTranslation('stopSpeaking') : getTranslation('speakMessage')}
+                          >
+                            {isSpeaking ? <FaStop /> : <FaVolumeUp />}
                           </Button>
                         </div>
                       )}

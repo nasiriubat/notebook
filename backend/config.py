@@ -15,3 +15,6 @@ class Config:
     SMTP_EMAIL = os.getenv('SMTP_EMAIL')
     SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
     OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+    ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
+    GOOGLE_CLOUD_CREDENTIALS = os.getenv('GOOGLE_CLOUD_CREDENTIALS')
+    AUDIO_STORAGE_PATH = os.getenv('AUDIO_STORAGE_PATH', 'audio')

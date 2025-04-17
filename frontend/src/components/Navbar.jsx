@@ -34,7 +34,7 @@ export default function NavigationBar() {
       >
         <Container>
           <Navbar.Brand href="/" className={theme === 'light' ? 'text-dark' : 'text-light'}>
-            {import.meta.env.VITE_APP_NAME ? import.meta.env.VITE_APP_NAME : 'RagBook'}
+            {import.meta.env.VITE_APP_NAME ? import.meta.env.VITE_APP_NAME : 'NoteScholar'}
           </Navbar.Brand>
           <Nav className="ms-auto d-flex align-items-center">
             <div className="d-flex align-items-center gap-2">

@@ -133,7 +133,11 @@ export default function NotebookPage() {
                 />
               </Col>
               <Col lg={3}>
-                <NoteComponent notebookId={id} onNoteAdded={handleSourceUpdate} />
+                <NoteComponent 
+                  notebookId={id} 
+                  onNoteAdded={handleSourceUpdate} 
+                  selectedSources={selectedSources}
+                />
               </Col>
             </Row>
           </div>
@@ -202,7 +206,11 @@ export default function NotebookPage() {
                   />
                 </Tab.Pane>
                 <Tab.Pane eventKey="notes" className="h-100">
-                  <NoteComponent notebookId={id} onNoteAdded={handleSourceUpdate} />
+                  <NoteComponent 
+                    notebookId={id} 
+                    onNoteAdded={handleSourceUpdate} 
+                    selectedSources={selectedSources}
+                  />
                 </Tab.Pane>
               </Tab.Content>
             </Tab.Container>
@@ -212,7 +220,7 @@ export default function NotebookPage() {
       
       <style>{`
         .footer {
-          background-color: var(--bs-body-bg);
+          background-color: var(--secondary);
           border-top: 1px solid var(--bs-border-color);
         }
         .tab-content {
@@ -226,7 +234,7 @@ export default function NotebookPage() {
         .modern-tabs {
           display: flex;
           justify-content: space-around;
-          background: var(--bs-body-bg);
+          background: var(--secondary);
           border: 1px solid var(--bs-border-color);
           padding: 0.5rem;
           border-radius: 1rem;
@@ -308,7 +316,7 @@ export default function NotebookPage() {
         /* Dark mode adjustments */
         @media (prefers-color-scheme: dark) {
           .modern-tabs {
-            background: rgba(33, 37, 41, 0.8);
+            background: transparent;
             border-color: rgba(255, 255, 255, 0.1);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
           }
@@ -329,30 +337,30 @@ export default function NotebookPage() {
 
           /* Enhanced dark mode for source tab */
           .card {
-            background: rgba(33, 37, 41, 0.8) !important;
+            background: transparent !important;
             border-color: rgba(255, 255, 255, 0.1) !important;
           }
 
           .source-input-area {
-            background: rgba(33, 37, 41, 0.8) !important;
+            background: var(--secondary) !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
             border-radius: 0.5rem !important;
             padding: 1rem !important;
             margin-bottom: 1rem !important;
             backdrop-filter: blur(10px) !important;
-            color: var(--bs-gray-300) !important;
+            color: var(--text) !important;
           }
 
           .source-input-area:hover {
             border-color: rgba(255, 255, 255, 0.2) !important;
-            background: rgba(33, 37, 41, 0.9) !important;
+            background: transparent !important;
           }
 
           .source-input-area .form-select,
           .source-input-area .form-control {
-            background-color: rgba(33, 37, 41, 0.8) !important;
+            background-color: var(--background) !important;
             border-color: rgba(255, 255, 255, 0.1) !important;
-            color: var(--bs-gray-300) !important;
+            color: var(--text) !important;
           }
 
           .source-input-area .form-select:focus,
