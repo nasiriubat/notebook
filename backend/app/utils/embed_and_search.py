@@ -19,11 +19,19 @@ EMBEDDINGS_FOLDER = Path("dataembedding")
 EMBEDDINGS_FOLDER.mkdir(parents=True, exist_ok=True)
 
 encoding = tiktoken.encoding_for_model("text-embedding-ada-002")
-MAX_TOKENS = 8192
+MAX_TOKENS = 8000
 
-def split_into_chunks(text: str, max_tokens: int = MAX_TOKENS) -> List[str]:
+def split_into_chunks(text: str, max_tokens: int = MAX_TOKENS, overlap: int = 200) -> List[str]:
     tokens = encoding.encode(text)
-    return [encoding.decode(tokens[i:i+max_tokens]) for i in range(0, len(tokens), max_tokens)]
+    chunks = []
+    start = 0
+    while start < len(tokens):
+        end = min(start + max_tokens, len(tokens))
+        chunk = encoding.decode(tokens[start:end])
+        chunks.append(chunk)
+        start += max_tokens - overlap
+    return chunks
+
 
 def create_embedding(text: str) -> Optional[np.ndarray]:
     try:
@@ -60,12 +68,13 @@ def generate_and_store_embeddings(text: str) -> Optional[str]:
     
     # Save embeddings
     embeddings_np = np.array(embeddings, dtype=np.float32)
+    embeddings_np = embeddings_np / np.linalg.norm(embeddings_np, axis=1, keepdims=True)
     embeddings_file = EMBEDDINGS_FOLDER / f"{file_id}_embeddings.npy"
     np.save(embeddings_file, embeddings_np)
     
     # Create and save FAISS index
     dimension = embeddings_np.shape[1]
-    index = faiss.IndexFlatL2(dimension)
+    index = faiss.IndexFlatIP(dimension)
     index.add(embeddings_np)
     index_file = EMBEDDINGS_FOLDER / f"{file_id}_index.faiss"
     faiss.write_index(index, str(index_file))

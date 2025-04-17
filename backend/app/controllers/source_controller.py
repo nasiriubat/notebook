@@ -13,7 +13,7 @@ from app.utils.file_utils import (
     extract_text_from_youtube,
 )
 from app.utils.embed_and_search import generate_and_store_embeddings, EMBEDDINGS_FOLDER
-from app.helper.ai_generate import openai_generate
+from app.helper.ai_generate import openai_generate, generate_summary
 import traceback
 import tempfile
 import os
@@ -75,15 +75,7 @@ def generate_unique_text_title(notebook_id):
         counter += 1
 
 
-def generate_summary(text):
-    """Generate a summary of the text using OpenAI."""
-    prompt = f"Please provide a concise summary of the following text:\n\n{text}"
-    try:
-        summary = openai_generate(prompt, False, summary=True)
-        return summary
-    except Exception as e:
-        print(f"Error generating summary: {str(e)}")
-        return text[:500] + "..."  # Fallback to first 500 characters if summary fails
+
 
 
 @jwt_required()

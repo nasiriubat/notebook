@@ -4,12 +4,22 @@ import requests
 import json
 
 
+def generate_summary(text, token_limit=False):
+    """Generate a summary of the text using OpenAI."""
+    prompt = f"Please provide a concise summary keeping immportant keywords {'within 7500 tokens' if token_limit else ''} of the following text:\n\n{text}"
+    try:
+        summary = openai_generate(prompt, False, summary=True)
+        return summary
+    except Exception as e:
+        print(f"Error generating summary: {str(e)}")
+        return text[:500] + "..."  # Fallback to first 500 characters if summary fails
+
 def openai_generate(prompt, is_regenerate=False, summary=False):
     messages = [
         {
             "role": "system",
             "content": (
-                "You are a summarizer that summarizes given text with important keywords."
+                "You are a summarizer that summarizes given text keeping important keywords."
                 if summary
                 else "You are a helpful assistant that answers questions based on the provided context. Start directly with the answer."
             ),
