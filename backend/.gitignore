@@ -5,3 +5,4 @@ instance/
 *.npy
 *.faiss
 *.pyc
+dataembedding/*
