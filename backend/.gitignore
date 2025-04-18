@@ -5,8 +5,4 @@ instance/
 *.npy
 *.faiss
 *.pyc
-<<<<<<< HEAD
 dataembedding/*
-=======
-*.json
->>>>>>> ca9718b253553dc1cb8f4f47896f1c01c018d394

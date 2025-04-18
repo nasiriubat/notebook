@@ -39,17 +39,21 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
   const handleDrop = async (e) => {
     e.preventDefault();
     setDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (!file) return;
+    const files = e.dataTransfer.files; // Get all dropped files
+    if (!files || files.length === 0) return;
 
-    await handleFileUpload(file);
+    for (const file of files) { // Loop through files
+      await handleFileUpload(file);
+    }
   };
 
   const handleFileSelect = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = e.target.files; // Get all selected files
+    if (!files || files.length === 0) return;
 
-    await handleFileUpload(file);
+    for (const file of files) { // Loop through files
+      await handleFileUpload(file);
+    }
   };
 
   const validateFileType = (file) => {
@@ -111,7 +115,7 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
       setError(null);
     } catch (err) {
       console.error("Error uploading file:", err);
-      setError(err.response?.data?.message || getTranslation('failedToUploadFile'));
+      setError(err.response?.data?.error || getTranslation('failedToUploadFile'));
     } finally {
       setUploading(false);
       setCreatingSource(false);
@@ -358,6 +362,7 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
                 onChange={handleFileSelect}
                 disabled={uploading}
                 accept={ALLOWED_FILE_TYPES.map(type => `.${type}`).join(',')}
+                multiple
               />
               <div
                 onClick={() => document.getElementById('file-upload').click()}
