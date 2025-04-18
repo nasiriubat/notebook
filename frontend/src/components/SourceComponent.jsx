@@ -113,9 +113,13 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
         onSourcesUpdate();
       }
       setError(null);
+
+      // Auto-select the newly created source
+      handleSourceSelect(response.data.id); // Assuming response.data.id contains the new source ID
+
     } catch (err) {
       console.error("Error uploading file:", err);
-      setError(err.response?.data?.error || getTranslation('failedToUploadFile'));
+      setError(err.response?.data?.message || getTranslation('failedToUploadFile'));
     } finally {
       setUploading(false);
       setCreatingSource(false);
@@ -156,6 +160,10 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
       if (onSourcesUpdate) {
         onSourcesUpdate();
       }
+
+      // Auto-select the newly created source
+      handleSourceSelect(response.data.id); // Assuming response.data.id contains the new source ID
+
     } catch (err) {
       console.error("Error creating text source:", err);
       const errorMessage = err.response?.data?.message ||
@@ -195,6 +203,10 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
       if (onSourcesUpdate) {
         onSourcesUpdate();
       }
+
+      // Auto-select the newly created source
+      handleSourceSelect(response.data.id); // Assuming response.data.id contains the new source ID
+
     } catch (err) {
       console.error("Error creating link source:", err);
       const errorMessage = err.response?.data?.message ||
