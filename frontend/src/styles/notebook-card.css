@@ -155,7 +155,7 @@
 
 .menu-item.text-danger:hover {
   background: var(--error);
-  color: white;
+  color: var(--text);
 }
 
 .notebook-footer {

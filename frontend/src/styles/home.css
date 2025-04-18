@@ -12,6 +12,7 @@
   padding: 1rem 0;
 }
 
+
 .notebook-card {
   background: var(--surface);
   border-radius: 12px;
@@ -126,7 +127,7 @@
 
 .menu-item.text-danger:hover {
   background: var(--error);
-  color: white;
+  color: var(--text);
 }
 
 .notebook-footer {
