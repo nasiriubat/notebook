@@ -14,6 +14,7 @@ export default function NavigationBar() {
   const { theme, toggleTheme } = useTheme();
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
+  const logo = theme === 'light' ? '/light-logo.png' : '/dark-logo.png';
 
   const handleLogout = async () => {
     try {
@@ -26,15 +27,25 @@ export default function NavigationBar() {
 
   return (
     <>
-      <Navbar 
-        bg={theme === 'light' ? 'light' : 'dark'} 
-        variant={theme === 'light' ? 'light' : 'dark'} 
-        expand="lg" 
+      <Navbar
+        bg={theme === 'light' ? 'light' : 'dark'}
+        variant={theme === 'light' ? 'light' : 'dark'}
+        expand="lg"
         className="sticky-top"
       >
         <Container>
           <Navbar.Brand href="/" className={theme === 'light' ? 'text-dark' : 'text-light'}>
-            {import.meta.env.VITE_APP_NAME ? import.meta.env.VITE_APP_NAME : 'NoteScholar'}
+            {/* {import.meta.env.VITE_APP_NAME ? import.meta.env.VITE_APP_NAME : 'NoteScholar'} */}
+            <img
+              src={logo}
+              alt="Logo"
+              className="d-inline-block"
+              style={{
+                width: '120px',
+                height: 'auto',
+                objectFit: 'contain'
+              }}
+            />
           </Navbar.Brand>
           <Nav className="ms-auto d-flex align-items-center">
             <div className="d-flex align-items-center gap-2">
@@ -86,8 +97,8 @@ export default function NavigationBar() {
       </Navbar>
 
       {/* Mobile Drawer */}
-      <Offcanvas 
-        show={showDrawer} 
+      <Offcanvas
+        show={showDrawer}
         onHide={() => setShowDrawer(false)}
         placement="start"
         className={theme === 'light' ? 'bg-light' : 'bg-dark'}
@@ -132,15 +143,15 @@ export default function NavigationBar() {
                 {getTranslation('login')}
               </button>
             )}
-                        <LanguageSwitcher className="mb-3" />
+            <LanguageSwitcher className="mb-3" />
 
           </div>
         </Offcanvas.Body>
       </Offcanvas>
 
-      <ChangePasswordModal 
-        show={showChangePassword} 
-        onHide={() => setShowChangePassword(false)} 
+      <ChangePasswordModal
+        show={showChangePassword}
+        onHide={() => setShowChangePassword(false)}
       />
       <style>
         {`

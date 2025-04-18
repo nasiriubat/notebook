@@ -419,14 +419,14 @@ export default function NotebookPage() {
           }
 
           .btn-outline-secondary:hover {
-            background-color: rgba(255, 255, 255, 0.1) !important;
-            border-color: var(--bs-gray-400) !important;
+           background-color: var(--surface) !important;
+            border-color: var(--border) !important;
           }
 
           /* Dropdown menu */
           .dropdown-menu {
             background-color: var(--surface) !important;
-            border-color: rgba(255, 255, 255, 0.1) !important;
+            border-color: var(--border) !important;
           }
 
           .dropdown-item {
@@ -434,8 +434,8 @@ export default function NotebookPage() {
           }
 
           .dropdown-item:hover {
-            background-color: rgba(255, 255, 255, 0.1) !important;
-            color: var(--bs-gray-100) !important;
+            background-color: var(--hover) !important;
+            color: var(--text) !important;
           }
         }
 

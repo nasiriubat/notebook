@@ -91,6 +91,10 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
             setError('Please select at least one source');
             return;
         }
+        if (selectedSources.length > 1) {
+            setError('Please select only one source to generate podcast.');
+            return;
+        }
 
         setLoading(true);
         setError(null);
