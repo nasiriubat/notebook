@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getSources, uploadSource, deleteSource, updateSource } from "../api/api";
-import { MdSend, MdContentPaste, MdClose, MdCloudUpload, MdMoreVert, MdEdit, MdDelete, MdContentCopy } from "react-icons/md";
+import { MdSend, MdContentPaste, MdClose, MdCloudUpload, MdMoreVert, MdEdit, MdDelete, MdAssignment  } from "react-icons/md";
 import { Card, Form, Button, Alert, Spinner, ListGroup, Modal, Dropdown } from 'react-bootstrap';
 import { NotebookContext } from "../context/NotebookContext";
 import { useContext } from "react";
@@ -23,6 +23,10 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
   const [editingSource, setEditingSource] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [editError, setEditError] = useState(null);
+
+  // New state variables for summary modal
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [selectedSourceSummary, setSelectedSourceSummary] = useState("");
 
   const ALLOWED_FILE_TYPES = ["pdf", "txt", "jpg", "jpeg", "png"];
   const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB in bytes
@@ -252,53 +256,6 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
     });
   };
 
-  const handlePaste = async (inputId) => {
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        // Try the modern Clipboard API
-        const text = await navigator.clipboard.readText();
-        updateInput(text, inputId);
-      } else {
-        // Fallback for non-secure contexts or older browsers
-        const text = await fallbackReadClipboard();
-        updateInput(text, inputId);
-      }
-    } catch (err) {
-      setInputError(getTranslation('failedToPaste'));
-    }
-  };
-
-  const fallbackReadClipboard = () => {
-    return new Promise((resolve, reject) => {
-      const textarea = document.createElement("textarea");
-      textarea.style.position = "fixed";
-      textarea.style.opacity = 0;
-      document.body.appendChild(textarea);
-      textarea.focus();
-      const successful = document.execCommand("paste");
-      const text = textarea.value;
-      document.body.removeChild(textarea);
-
-      if (successful && text) {
-        resolve(text);
-      } else {
-        reject("Clipboard access failed");
-      }
-    });
-  };
-
-  const updateInput = (text, inputId) => {
-    if (selectedInputType === "text") {
-      setTextInputs(prev => ({
-        ...prev,
-        [inputId]: text
-      }));
-    } else if (selectedInputType === "link") {
-      setLinkInput(text);
-    }
-  };
-
-
   const handleEditSource = (source) => {
     setEditingSource(source);
     setEditTitle(source.title);
@@ -333,37 +290,10 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
     }
   };
 
-  const handleCopyDescription = async (description) => {
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        // Modern API
-        await navigator.clipboard.writeText(description);
-      } else {
-        // Fallback method
-        fallbackCopyTextToClipboard(description);
-      }
-    } catch (err) {
-      setError(getTranslation('failedToCopy'));
-    }
-  };
-
-  const fallbackCopyTextToClipboard = (text) => {
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    textarea.style.position = "fixed";  // Prevent scrolling to bottom of page in MS Edge.
-    textarea.style.opacity = "0";
-    document.body.appendChild(textarea);
-    textarea.focus();
-    textarea.select();
-
-    try {
-      document.execCommand('copy');
-    } catch (err) {
-      console.error('Fallback: Copy command failed', err);
-      setError(getTranslation('failedToCopy'));
-    }
-
-    document.body.removeChild(textarea);
+  // New function to handle showing the summary modal
+  const handleShowSummary = (description) => {
+    setSelectedSourceSummary(description);
+    setShowSummaryModal(true);
   };
 
   const handleInputTypeChange = (e) => {
@@ -481,10 +411,7 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
                     {text.length}/{MAX_TEXT_LENGTH} {getTranslation('characters')}
                   </small>
                 </div>
-                <div className="d-flex gap-2">
-                  <Button variant="outline-secondary" className="flex-grow-1" onClick={() => handlePaste(inputId)}>
-                    <MdContentPaste className="me-1 react-icons" style={{ fontSize: '1rem' }} /> {getTranslation('paste')}
-                  </Button>
+                <div className="d-flex justify-content-between align-items-center">
                   <Button variant="primary" className="flex-grow-1" onClick={() => handleTextSubmit(inputId)} disabled={uploading}>
                     <MdSend className="me-1 react-icons" style={{ fontSize: '1rem' }} /> {getTranslation('send')}
                   </Button>
@@ -504,9 +431,6 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
                 onChange={(e) => setLinkInput(e.target.value)}
                 placeholder={getTranslation('enterWebLink')}
               />
-              <Button variant="outline-secondary" onClick={() => handlePaste('link')}>
-                <MdContentPaste className="react-icons" style={{ fontSize: '1.2rem' }} />
-              </Button>
               <Button variant="primary" onClick={handleLinkSubmit} disabled={uploading}>
                 <MdSend className="react-icons" style={{ fontSize: '1.2rem' }} />
               </Button>
@@ -555,8 +479,8 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
                       <MdMoreVert className="react-icons" />
                     </Dropdown.Toggle>
                     <Dropdown.Menu align="end">
-                      <Dropdown.Item onClick={() => handleCopyDescription(src.description)}>
-                        <MdContentCopy className="me-2 react-icons" /> {getTranslation('copyText')}
+                      <Dropdown.Item onClick={() => handleShowSummary(src.description)}>
+                        <MdAssignment  className="me-2 react-icons" /> {getTranslation('summary')}
                       </Dropdown.Item>
                       <Dropdown.Item onClick={() => handleEditSource(src)}>
                         <MdEdit className="me-2 react-icons" /> {getTranslation('editTitle')}
@@ -617,6 +541,21 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
               <Spinner animation="border" size="sm" className="me-2" />
             ) : null}
             {getTranslation('saveChanges')}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Summary Modal */}
+      <Modal show={showSummaryModal} onHide={() => setShowSummaryModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>{getTranslation('sourceSummary')}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>{selectedSourceSummary}</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowSummaryModal(false)}>
+            {getTranslation('close')}
           </Button>
         </Modal.Footer>
       </Modal>
