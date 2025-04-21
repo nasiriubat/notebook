@@ -254,19 +254,50 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
 
   const handlePaste = async (inputId) => {
     try {
-      const text = await navigator.clipboard.readText();
-      if (selectedInputType === "text") {
-        setTextInputs(prev => ({
-          ...prev,
-          [inputId]: text
-        }));
-      } else if (selectedInputType === "link") {
-        setLinkInput(text);
+      if (navigator.clipboard && window.isSecureContext) {
+        // Try the modern Clipboard API
+        const text = await navigator.clipboard.readText();
+        updateInput(text, inputId);
+      } else {
+        // Fallback for non-secure contexts or older browsers
+        const text = await fallbackReadClipboard();
+        updateInput(text, inputId);
       }
     } catch (err) {
       setInputError(getTranslation('failedToPaste'));
     }
   };
+
+  const fallbackReadClipboard = () => {
+    return new Promise((resolve, reject) => {
+      const textarea = document.createElement("textarea");
+      textarea.style.position = "fixed";
+      textarea.style.opacity = 0;
+      document.body.appendChild(textarea);
+      textarea.focus();
+      const successful = document.execCommand("paste");
+      const text = textarea.value;
+      document.body.removeChild(textarea);
+
+      if (successful && text) {
+        resolve(text);
+      } else {
+        reject("Clipboard access failed");
+      }
+    });
+  };
+
+  const updateInput = (text, inputId) => {
+    if (selectedInputType === "text") {
+      setTextInputs(prev => ({
+        ...prev,
+        [inputId]: text
+      }));
+    } else if (selectedInputType === "link") {
+      setLinkInput(text);
+    }
+  };
+
 
   const handleEditSource = (source) => {
     setEditingSource(source);
@@ -304,10 +335,35 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
 
   const handleCopyDescription = async (description) => {
     try {
-      await navigator.clipboard.writeText(description);
+      if (navigator.clipboard && window.isSecureContext) {
+        // Modern API
+        await navigator.clipboard.writeText(description);
+      } else {
+        // Fallback method
+        fallbackCopyTextToClipboard(description);
+      }
     } catch (err) {
       setError(getTranslation('failedToCopy'));
     }
+  };
+
+  const fallbackCopyTextToClipboard = (text) => {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";  // Prevent scrolling to bottom of page in MS Edge.
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    try {
+      document.execCommand('copy');
+    } catch (err) {
+      console.error('Fallback: Copy command failed', err);
+      setError(getTranslation('failedToCopy'));
+    }
+
+    document.body.removeChild(textarea);
   };
 
   const handleInputTypeChange = (e) => {
