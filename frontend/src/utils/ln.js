@@ -133,6 +133,7 @@ export const translations = {
         createNotebookPlaceholder: "Enter notebook name",
         noNotebookYet: "No notebooks yet",
         createYourFirstNotebook: "Create your first notebook to get started",
+        sourceSummary: "Source Summary",
 
         // Notebook Card
         open: "Open",
@@ -148,6 +149,7 @@ export const translations = {
     },
     fi: {
         // home page
+        sourceSummary: "Lähteiden yhteenveto",
         notes: "Muistiinpanot",
         create:"Luo",
         noNotebookYet: "Ei muistikirjoja vielä",
