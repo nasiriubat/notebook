@@ -377,7 +377,7 @@ export default function SourceComponent({ notebookId, onSourceSelect, sources, o
             <Alert variant="warning" className="mb-2 py-1 text-center ">
               <small className="d-block mb-1">
                 <i className="bi bi-exclamation-triangle me-1"></i>
-                {ALLOWED_FILE_TYPES.join(', ')}
+                {ALLOWED_FILE_TYPES.map(type => type.toUpperCase()).join(', ')}
                 {getTranslation('maxFileSize')}
               </small>
             </Alert>
