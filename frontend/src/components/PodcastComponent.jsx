@@ -6,7 +6,7 @@ import { generatePodcast } from '../api/api';
 import './PodcastComponent.css';
 
 const PodcastComponent = ({ notebookId, selectedSources }) => {
-    
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [audioContext, setAudioContext] = useState(null);
@@ -15,19 +15,19 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
     const [currentSource, setCurrentSource] = useState(null);
     const [audioUrl, setAudioUrl] = useState(null);
     const [notebookName, setNotebookName] = useState(null);
-    
+
     // New state variables for podcast options
     const [podcastMode, setPodcastMode] = useState('normal');
     const [personCount, setPersonCount] = useState(2);
     const [hasHost, setHasHost] = useState(false);
-    
+
     // Animation state
     const [activeSpeaker, setActiveSpeaker] = useState(0);
     const [speakerTimings, setSpeakerTimings] = useState([]);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const animationIntervalRef = useRef(null);
-    
+
     // Speaker colors
     const speakerColors = [
         '#4CAF50', // Green
@@ -69,7 +69,7 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
             setError('Failed to initialize audio playback. Please try a different browser.');
         }
     }, [audioContext]);
-    
+
     // Rotate active speaker when playing
     useEffect(() => {
         let interval;
@@ -80,7 +80,7 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
         } else {
             setActiveSpeaker(0);
         }
-        
+
         return () => {
             if (interval) clearInterval(interval);
         };
@@ -133,13 +133,13 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
         const sampleRate = buffer.sampleRate;
         const format = 1; // PCM
         const bitDepth = 16;
-        
+
         const bytesPerSample = bitDepth / 8;
         const blockAlign = numChannels * bytesPerSample;
-        
+
         const wav = new ArrayBuffer(44 + buffer.length * blockAlign);
         const view = new DataView(wav);
-        
+
         // Write WAV header
         writeString(view, 0, 'RIFF');
         view.setUint32(4, 36 + buffer.length * blockAlign, true);
@@ -154,11 +154,11 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
         view.setUint16(34, bitDepth, true);
         writeString(view, 36, 'data');
         view.setUint32(40, buffer.length * blockAlign, true);
-        
+
         // Write audio data
         const offset = 44;
         let index = 0;
-        
+
         for (let i = 0; i < buffer.length; i++) {
             for (let channel = 0; channel < numChannels; channel++) {
                 const sample = Math.max(-1, Math.min(1, buffer.getChannelData(channel)[i]));
@@ -167,7 +167,7 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
                 index += 2;
             }
         }
-        
+
         return new Blob([wav], { type: 'audio/wav' });
     };
 
@@ -197,21 +197,21 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffer;
         source.connect(audioContext.destination);
-        
+
         // Create an analyzer to detect which speaker is active
         const analyzer = audioContext.createAnalyser();
         analyzer.fftSize = 2048;
         source.connect(analyzer);
         analyzer.connect(audioContext.destination);
-        
+
         // Start playback
         source.start(0);
         setCurrentSource(source);
         setIsPlaying(true);
-        
+
         // Set duration
         setDuration(audioBuffer.duration);
-        
+
         // Start animation interval
         animationIntervalRef.current = setInterval(() => {
             setCurrentTime(prevTime => {
@@ -223,23 +223,23 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
                 return newTime;
             });
         }, 100);
-        
+
         // Update active speaker based on time
         const updateActiveSpeaker = () => {
             if (!isPlaying) return;
-            
+
             // Calculate which speaker should be active based on current time
             // This is a simple rotation - in a real app, you'd parse the audio metadata
             const totalSpeakers = hasHost ? personCount + 1 : personCount;
             const timePerSpeaker = audioBuffer.duration / totalSpeakers;
             const currentSpeakerIndex = Math.floor(currentTime / timePerSpeaker);
-            
+
             setActiveSpeaker(currentSpeakerIndex % totalSpeakers);
         };
-        
+
         // Update speaker every 500ms
         const speakerInterval = setInterval(updateActiveSpeaker, 500);
-        
+
         source.onended = () => {
             setIsPlaying(false);
             setCurrentSource(null);
@@ -265,22 +265,22 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
 
     const handleDownload = () => {
         if (!audioUrl) return;
-        
+
         try {
             // Create a temporary link element
             const link = document.createElement('a');
             link.href = audioUrl;
             link.download = `${notebookName || 'podcast'}.wav`;
-            
+
             // Append to body, click, and remove
             document.body.appendChild(link);
             link.click();
-            
+
             // Clean up after a short delay to ensure the download starts
             setTimeout(() => {
                 document.body.removeChild(link);
             }, 100);
-            
+
             console.log('Download initiated for:', `${notebookName || 'podcast'}.wav`);
         } catch (err) {
             console.error('Error downloading audio:', err);
@@ -288,64 +288,36 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
         }
     };
 
-    // Render speaker avatars
+    // Render a single animated avatar or waveform during audio playback
     const renderSpeakerAvatars = () => {
-        const totalSpeakers = hasHost ? personCount + 1 : personCount;
-        const speakers = [];
-        
-        for (let i = 0; i < totalSpeakers; i++) {
-            const isActive = i === activeSpeaker && isPlaying;
-            const isHost = i === 0 && hasHost;
-            
-            // Calculate animation delay based on speaker index
-            const animationDelay = `${i * 0.1}s`;
-            
-            speakers.push(
-                <div 
-                    key={i} 
-                    className={`speaker-avatar ${isActive ? 'active' : ''}`}
-                    style={{ 
-                        backgroundColor: speakerColors[i % speakerColors.length],
-                        transitionDelay: animationDelay
-                    }}
-                >
-                    <div className="speaker-label">
-                        {isHost ? 'Host' : `Speaker ${i + (hasHost ? 0 : 1)}`}
-                    </div>
-                    <div className="sound-wave-container">
-                        <div 
-                            className={`sound-wave-bar ${isActive ? 'animate' : ''}`}
-                            style={{ animationDelay: `${i * 0.1}s` }}
-                        ></div>
-                        <div 
-                            className={`sound-wave-bar ${isActive ? 'animate' : ''}`}
-                            style={{ animationDelay: `${i * 0.1 + 0.2}s` }}
-                        ></div>
-                        <div 
-                            className={`sound-wave-bar ${isActive ? 'animate' : ''}`}
-                            style={{ animationDelay: `${i * 0.1 + 0.4}s` }}
-                        ></div>
-                    </div>
+        if (!isPlaying) return null;
+
+        return (
+            <div className="audio-visualizer">
+                <div className="speaker-label">Playing Podcast</div>
+                <div className="sound-wave-container">
+                    <div className="sound-wave-bar animate"></div>
+                    <div className="sound-wave-bar animate" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="sound-wave-bar animate" style={{ animationDelay: '0.4s' }}></div>
                 </div>
-            );
-        }
-        
-        return speakers;
+            </div>
+        );
     };
+
 
     return (
         <Card className="podcast-component mb-4 shadow-sm">
             <Card.Body>
                 <Form>
                     {error && <Alert variant="danger">{error}</Alert>}
-                    
+
                     <div className="d-grid gap-3">
                         <Row className="g-3 mb-3">
                             <Col md={4}>
                                 <FormGroup>
                                     <FormLabel>Mode</FormLabel>
-                                    <FormControl 
-                                        as="select" 
+                                    <FormControl
+                                        as="select"
                                         value={podcastMode}
                                         onChange={(e) => setPodcastMode(e.target.value)}
                                     >
@@ -357,10 +329,10 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
                             <Col md={4}>
                                 <FormGroup>
                                     <FormLabel>People</FormLabel>
-                                    <FormControl 
-                                        type="number" 
-                                        min="2" 
-                                        max="5" 
+                                    <FormControl
+                                        type="number"
+                                        min="2"
+                                        max="5"
                                         value={personCount}
                                         onChange={(e) => setPersonCount(parseInt(e.target.value))}
                                     />
@@ -370,7 +342,7 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
                                 <FormGroup>
                                     <FormLabel>Host</FormLabel>
                                     <div className="d-flex align-items-center mt-2">
-                                        <Form.Check 
+                                        <Form.Check
                                             type="switch"
                                             id="host-switch"
                                             checked={hasHost}
@@ -381,7 +353,7 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
                                 </FormGroup>
                             </Col>
                         </Row>
-                        
+
                         <Button
                             variant="primary"
                             size="lg"
@@ -401,20 +373,15 @@ const PodcastComponent = ({ notebookId, selectedSources }) => {
                                 </>
                             )}
                         </Button>
-                        
-                        {/* Animation Container - Always visible */}
-                        <div className="animation-container mt-3 p-3 rounded">
-                            {!audioBuffer ? (
-                                <div className="text-center text-muted">
-                                    <p>Generate a podcast to see the animation</p>
-                                </div>
-                            ) : (
+
+                        {/* {audioBuffer && (
+                            <div className="animation-container mt-3 p-3 rounded">
                                 <div className="speakers-container">
                                     {renderSpeakerAvatars()}
                                 </div>
-                            )}
-                        </div>
-                        
+                            </div>
+                        )} */}
+
                         {audioBuffer && (
                             <Row className="g-2">
                                 <Col xs={6}>
