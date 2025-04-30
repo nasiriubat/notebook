@@ -1,0 +1,45 @@
+Step-by-Step:
+1. User submits a query
+→ Query text is embedded locally using
+Tool: SentenceTransformer ('all-MiniLM-L6-v2') 
+
+(Embedding is done via create_embedding() function.)
+
+2. Search for similar content
+→ The system compares the query embedding against stored document chunk embeddings using
+Tool: cosine_similarity from sklearn.metrics.pairwise 
+.
+
+3. Evaluate results
+→ Top similar chunks are scored using a relevance scoring function (calculate_relevance_score()), which checks:
+
+Semantic similarity
+
+Word match ratio
+
+Exact phrase match 
+
+4. If similar content is found (above threshold 0.3)
+→ Return top matching chunks as retrieved context to GPT-4 for answering.
+
+5. If no sufficient similarity found
+→ System falls back to fetching summary information from the SQLite database (where source document metadata is stored).
+
+Purpose:
+So the user still gets some useful background context even when direct similarity fails.
+
+6. Context is sent to GPT-4
+→ OpenAI GPT-4 API is used for final answer generation, combining:
+
+Retrieved document chunks (if available)
+
+OR source summaries (if no match)
+
+7. Final Answer Display
+→ The GPT-4-generated response is returned to the ReactJS frontend and displayed to the user.
+
+
+
+----------------
+Podcast Layer
+User Selects Single Source → Configures Podcast (Mode, Host, Persons) → Generate Podcast Script (OpenAI) → Text-to-Speech (TTS) → Return WAV Download/Play Button
