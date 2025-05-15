@@ -9,7 +9,7 @@ git pull origin main
 
 # Backend update
 cd backend
-# source venv/bin/activate
+source venv/bin/activate
 # pip install -r requirements.txt
 # flask db upgrade
 pm2 restart flask-backend
